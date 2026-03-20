@@ -716,4 +716,137 @@ elif menu == "📅 Calendario POD":
             * **Marzo:** ¡URGENTE! Diseña para *Mother's Day*.
             
             **Q2 (Abr - Jun)**
-            * **Abril:** Sube diseños de *Father's Day* y *Gradu
+            * **Abril:** Sube diseños de *Father's Day* y *Graduaciones*.
+            * **Mayo:** Diseña para *Teacher Appreciation* y *Nurse Week*.
+            * **Junio:** Sube nichos de verano (Camping, Julio 4th).
+            """)
+        with col_q2:
+            st.markdown("""
+            **Q3 (Jul - Sep)**
+            * **Julio:** Diseña para *Back to School*.
+            * **Agosto:** Sube *Halloween* (El algoritmo necesita tiempo).
+            * **Septiembre:** Sube *Thanksgiving* y prepara *Navidad*.
+            
+            **Q4 (Oct - Dic) - ¡Temporada Alta!**
+            * **Octubre:** Todo debe ser *Christmas* y *Ugly Sweaters*.
+            * **Noviembre:** Black Friday / Cyber Monday.
+            * **Diciembre:** Prepara diseños de *New Year*.
+            """)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with tab_cup:
+        st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+        st.subheader("El Embudo de Retención (Estilo Top Sellers)")
+        st.markdown("Ve a **Marketing > Sales and Discounts** en Etsy y configura estas 3 campañas:")
+        st.info("**1. Carrito Abandonado (Abandoned Cart)** - 15% OFF (Código: VUELVE15)")
+        st.success("**2. Agradecimiento Post-Compra (Thank You)** - 20% OFF (Código: GRACIAS20)")
+        st.warning("**3. Favoritos (Recently Favorited)** - 10% OFF (Código: TUYO10)")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+elif menu == "📈 Auditoría de Tienda":
+    st.markdown("<h1>📈 Auditoría de Tienda (Identifica tus Ganadores)</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+    st.markdown("Ve a **Etsy > Settings > Options > Download Data > Orders** y sube ese archivo CSV aquí para descubrir qué escalar.")
+
+    uploaded_csv = st.file_uploader("Sube tu archivo CSV de Pedidos (EtsySoldOrders.csv)", type=["csv"])
+
+    if uploaded_csv:
+        try:
+            df = pd.read_csv(uploaded_csv)
+            item_col = [col for col in df.columns if 'Item Name' in col or 'Artículo' in col or 'Title' in col]
+            qty_col = [col for col in df.columns if 'Quantity' in col or 'Cantidad' in col]
+            
+            if item_col and qty_col:
+                item_name = item_col[0]
+                qty_name = qty_col[0]
+                
+                ventas_por_producto = df.groupby(item_name)[qty_name].sum().reset_index()
+                ventas_por_producto = ventas_por_producto.sort_values(by=qty_name, ascending=False)
+                
+                st.subheader("🏆 Tus Top 5 Productos (¡Escala estos!)")
+                st.markdown("*Estrategia: Pon estos diseños en OTROS productos (ej. de Taza a Sudadera).*")
+                st.dataframe(ventas_por_producto.head(5), use_container_width=True)
+                
+                st.subheader("💀 Productos Muertos (Mátalos o re-optimízalos)")
+                st.markdown("*Estrategia: Cambia el Mockup o el SEO. Si no venden en 2 meses más, bórralos.*")
+                st.dataframe(ventas_por_producto.tail(5), use_container_width=True)
+                
+            else:
+                st.error("No se encontraron las columnas de 'Item Name' y 'Quantity' en el CSV.")
+                
+        except Exception as e:
+            st.error(f"Hubo un error al leer el archivo. Detalle: {e}")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+elif menu == "🔮 Radar Dinámico":
+    st.markdown("<h1>🔮 Radar Dinámico de Tendencias (¿Qué diseñar HOY?)</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+    mes_actual = datetime.datetime.now().month
+    mes_objetivo = (mes_actual + 2) % 12
+    if mes_objetivo == 0: mes_objetivo = 12
+
+    meses = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+        7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+
+    st.markdown(f"Estamos en **{meses[mes_actual]}**. El algoritmo de Etsy tarda semanas en indexar SEO. Por lo tanto, hoy deberías estar subiendo diseños para la demanda masiva de **{meses[mes_objetivo]}** y el mes siguiente.")
+
+    tendencias_futuras = {
+        1: ["St. Patrick's Day (Marzo)", "Easter / Pascua (Marzo/Abril)", "Spring Break (Marzo)"],
+        2: ["Mother's Day (Mayo - ¡URGENTE!)", "Cinco de Mayo", "Graduaciones Tempranas"],
+        3: ["Teacher Appreciation (Mayo)", "Nurse Week (Mayo)", "Father's Day (Junio - Empieza a diseñar)"],
+        4: ["Father's Day (Junio)", "Pride Month (Junio)", "Summer Vacations / Family Trips (Junio/Julio)"],
+        5: ["Julio 4th (Independencia EUA)", "Camping / Lake Life (Julio)", "Bachelorette Parties (Verano)"],
+        6: ["Back to School (Agosto/Septiembre)", "Fall / Otoño temprano (Hojas, Calabazas)", "Halloween (Agosto - Empieza ya)"],
+        7: ["Halloween (Octubre)", "Thanksgiving / Friendsgiving (Noviembre)", "Autumn Festivals"],
+        8: ["Christmas / Ugly Sweaters (Diciembre - Sube todo en Q4)", "Navidad para Mascotas"],
+        9: ["Black Friday Prep", "Regalos Navideños Personalizados", "Winter / Nieve"],
+        10: ["New Year's Eve (Enero)", "Fitness / Gym Goals (Para Enero)", "Valentine's Day (Febrero - Prepárate)"],
+        11: ["Valentine's Day (Febrero)", "Super Bowl / Sports (Febrero)"],
+        12: ["Valentine's Day (Febrero)", "100 Days of School", "Mardi Gras"]
+    }
+
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        st.success(f"**NICHOS EN AUGE PARA SUBIR HOY:**")
+        for tendencia in tendencias_futuras.get(mes_actual, ["Temporada General"]):
+            st.write(f"✅ {tendencia}")
+
+    with col_t2:
+        st.warning("**ESTILO GRÁFICO EN TENDENCIA (EUA):**")
+        st.write("🎨 Retro Wavy Text (Estilo años 70s)")
+        st.write("🎨 Minimalist Line Art (Elegante y barato de imprimir)")
+        st.write("🎨 Faux Embroidery (Efecto bordado impreso)")
+        st.write("🎨 Bootleg Rap 90s (Camisetas vintage personalizadas con fotos)")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+elif menu == "💡 Máquina de Ideas":
+    st.markdown("<h1>💡 Máquina de Ideas (Micro-Nichos Inexplorados)</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+    st.markdown("Haz clic en el botón para generar combinaciones únicas basadas en las matrices de éxito de tiendas multimillonarias.")
+
+    col_idea1, col_idea2 = st.columns(2)
+
+    with col_idea1:
+        if st.button("🎲 Generar Idea para POD Mascotas"):
+            mascotas = ["Perro de Tres Patas", "Gato Ciego", "Perro de Terapia para Autismo", "Mascota Rescatada de Refugio", "Hurón de Apoyo Emocional", "Perro Policia Retirado", "Golden Retriever Senior", "Gato Negro (Mala Suerte Revertida)"]
+            angulos = ["Memorial Acuarela", "Regalo de Gotcha Day (Adopción)", "Arte de Línea Minimalista", "Diseño Divertido de 'Empleado del Mes'", "Retrato Estilo Renacentista"]
+            productos = ["Taza de Café con Interior Negro", "Manta Súper Suave", "Adorno Navideño Acrílico", "Vaso Térmico para Enfermeras", "Sudadera Premium"]
+            
+            st.success(f"**Idea Generada:**")
+            st.write(f"**Nicho:** {random.choice(mascotas)}")
+            st.write(f"**Ángulo:** {random.choice(angulos)}")
+            st.write(f"**Producto:** {random.choice(productos)}")
+            st.caption("Estrategia: Busca esto en Etsy. Si hay menos de 500 resultados, ¡hazlo hoy!")
+
+    with col_idea2:
+        if st.button("🎲 Generar Idea para Invitaciones"):
+            eventos = ["Fiesta de Divorcio", "Cumpleaños 15 de Perro Senior", "Adopción Oficial de Padrastro", "Celebración de Vida (Funeral Alegre)", "Fiesta de Quitarse los Brackets", "Fiesta de Vasectomía", "Aniversario de Supervivencia al Cáncer"]
+            estilos = ["Acuarela Floral Oscura", "Tipografía Retro Años 70s", "Minimalista Blanco y Negro", "Estilo Periódico Vintage", "Boleto de Avión/Concierto Falso"]
+            
+            st.success(f"**Idea Generada:**")
+            st.write(f"**Evento:** {random.choice(eventos)}")
+            st.write(f"**Estilo Visual:** {random.choice(estilos)}")
+            st.caption("Estrategia: El mercado de 'Anti-Fiestas' o celebraciones no convencionales está explotando en TikTok. Capitaliza esto.")
+    st.markdown("</div>", unsafe_allow_html=True)
