@@ -187,68 +187,102 @@ def generar_tags_etsy(keywords, product, niche, lang="en"):
             
     return tags[:13]
 
-def generar_descripcion_vendedora(product, niche, texto_detectado, lang="en"):
-    if lang == "en":
-        prod_en = limpiar_producto_en(product)
-        niche_en = limpiar_nicho_en(niche)
-        
-        return f"""Give the perfect gift with this custom {prod_en} designed exclusively for {niche_en}s! 
+def obtener_detalles_printify(producto):
+    p = producto.lower()
+    if "3001" in p or "t-shirt" in p:
+        return "👕 ITEM SPECS (Bella+Canvas 3001):\n- 100% Airlume combed and ringspun cotton (ultra-soft!)\n- Light fabric (4.2 oz/yd²)\n- Retail fit & Tear away label\n- Runs true to size"
+    elif "18000" in p or "18500" in p or "hoodie" in p or "sweatshirt" in p:
+        return "🧥 ITEM SPECS (Premium Blend):\n- 50% cotton, 50% polyester\n- Medium-heavy fabric for cozy warmth\n- Classic fit & Tear-away label\n- Runs true to size"
+    elif "mug" in p:
+        return "☕ ITEM SPECS (Ceramic Mug):\n- High-quality white ceramic\n- Lead and BPA-free\n- Microwave and dishwasher safe\n- Vibrant, fade-resistant wrap-around print"
+    elif "blanket" in p:
+        return "🛌 ITEM SPECS (Velveteen Plush):\n- 100% Polyester for extreme, cozy softness\n- Double needle topstitch on all seams\n- Vibrant, high-detail one-sided print\n- Machine washable (cold)"
+    elif "plaque" in p:
+        return "✨ ITEM SPECS (Acrylic Plaque):\n- Premium, crystal-clear acrylic\n- Vibrant, fade-resistant printed design\n- Sleek and modern aesthetic, perfect for display"
+    elif "bandana" in p:
+        return "🐾 ITEM SPECS (Pet Bandana):\n- 100% soft spun polyester\n- Breathable, durable, and lightweight\n- One-sided vibrant print\n- Perfect fit for your furry friend"
+    elif "digital" in p or "evite" in p or "sign" in p:
+        return "📱 ITEM SPECS (Digital File):\n- High-resolution digital download (JPEG/PDF)\n- NO physical item will be shipped\n- Ready to print at home, local print shop, or send via text/email"
+    else:
+        return "✨ ITEM SPECS:\n- Premium quality materials\n- Vibrant and durable printing\n- Carefully crafted to order"
 
-Whether you're looking for a unique present or treating yourself, this "{texto_detectado}" design is guaranteed to bring a smile. Our items are made with premium materials to ensure vibrant and long-lasting quality.
+def generar_descripcion_vendedora(product, niche, texto_detectado, lang="en"):
+    # Limpiar palabras para SEO
+    prod_en = limpiar_producto_en(product)
+    niche_en = limpiar_nicho_en(niche)
+    detalles_printify = obtener_detalles_printify(product)
+    kw = texto_detectado if texto_detectado else "Custom Art"
+    
+    if lang == "en":
+        return f"""{prod_en} for {niche_en} | Personalized {kw} Gift | Custom {prod_en}
+
+Give the perfect meaningful gift with this custom {prod_en} designed exclusively for {niche_en}s! 
+Whether you're looking for a unique present or treating yourself, this gorgeous "{kw}" design is guaranteed to bring a smile. 
 
 ✨ HOW TO PERSONALIZE ✨
 1. Enter your specific details in the personalization box.
 2. Double-check your spelling! We print exactly what you provide.
 3. Add to cart and checkout!
 
-🎨 DIGITAL PROOF ADD-ON (OPTIONAL)
-To keep our production times fast and our prices low, proofs are NOT automatically included. 
-If you are ordering a PHYSICAL product and would like to see the artwork before it goes to print, please purchase our "Digital Proof Add-On" listing alongside this item. Otherwise, our artists will use their expert judgment to make your design look amazing!
+{detalles_printify}
 
-👕 PRODUCT DETAILS 
-- Premium quality {prod_en}. 
-- Vibrant, durable POD printing.
-📦 SHIPPING: Processed in 2-5 business days. Tracking included!"""
+🎨 DIGITAL PROOF ADD-ON (OPTIONAL)
+To keep our production times fast and prices low, proofs are NOT automatically included. 
+Want to see the artwork before it prints? Purchase our "Digital Proof Add-On" listing alongside this item! Otherwise, our expert artists will ensure your design looks amazing.
+
+📦 SHIPPING & PRODUCTION 
+- Carefully made to order just for you.
+- Production: 2-5 business days.
+- Tracking number included with every physical order!
+
+🤍 Thank you for supporting our small business! 
+Explore more custom designs in our shop: [Insert Your Shop Link Here]"""
     else:
         prod_es = product.split(" (")[0].strip()
         nicho_es = niche.split(" (")[0].strip()
         
         return f"""🔥 ¡Da el regalo perfecto con este {prod_es} Personalizado diseñado exclusivamente para {nicho_es}! 
-Ya sea para un regalo único o para ti mismo, este diseño de "{texto_detectado}" garantiza una sonrisa. 
+Ya sea para un regalo único o para ti mismo, este diseño de "{kw}" garantiza una sonrisa. 
 
 ✨ CÓMO PERSONALIZAR ✨
 1. Ingresa los detalles en la caja de personalización.
 2. ¡Revisa la ortografía! Imprimimos exactamente lo que escribes.
 
+{detalles_printify}
+
 🎨 MUESTRA DIGITAL (OPCIONAL - COSTO EXTRA)
 Para mantener nuestros tiempos de envío rápidos, las muestras NO están incluidas automáticamente. 
 Si deseas ver el arte antes de imprimir, por favor compra nuestro listado "Digital Proof Add-On" junto con este artículo. 
 
-👕 DETALLES Y ENVÍO
-- {prod_es} de calidad premium.
-📦 Procesado en 2-5 días hábiles. ¡Rastreo incluido!"""
+📦 DETALLES Y ENVÍO
+- Procesado en 2-5 días hábiles. ¡Rastreo incluido!"""
 
 # =========================
 # UI DE LA APLICACIÓN
 # =========================
 
 # -----------------------------
-# 1. SUBIR DISEÑO (OCR o Concepto Manual)
+# 1. SUBIR DISEÑO
 # -----------------------------
-st.header("1️⃣ Definir Concepto del Diseño")
-uploaded_file = st.file_uploader("Sube tu diseño para analizarlo", type=["png", "jpg", "jpeg"])
+with tab1:
+    st.header("1️⃣ Subir diseño (OCR o Manual)")
+    uploaded_file = st.file_uploader("Sube tu diseño transparente (PNG)", type=["png", "jpg", "jpeg"])
 
-if uploaded_file:
-    # --- Procesamiento de Imagen (Tu código original) ---
-    image = Image.open(uploaded_file)
-    if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
-        fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
-        fondo_blanco.paste(image, mask=image.split()[-1])
-        image = fondo_blanco
-    else:
-        image = image.convert("RGB")
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        
+        # --- MAGIA PARA FONDOS TRANSPARENTES (EL ARREGLO) ---
+        if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
+            # Usamos un fondo GRIS OSCURO (40, 40, 40) en lugar de blanco.
+            # Esto asegura que los diseños con letras blancas o negras sean visibles para el OCR.
+            fondo_seguro = Image.new("RGB", image.size, (40, 40, 40))
+            fondo_seguro.paste(image, mask=image.split()[-1])
+            image = fondo_seguro
+        else:
+            image = image.convert("RGB")
 
-    st.image(image, caption="Vista previa", width=300)
+st.image(image, caption="Vista previa (Fondo ajustado para lectura)", width=300)
+        st.markdown("---")
 
     # --- NUEVA LÓGICA ESTRATÉGICA ---
     st.markdown("---")
