@@ -12,98 +12,110 @@ import random
 import calendar
 
 # =========================
-# CONFIGURACIÓN VISUAL (ESTILO APP OSCURA / TARJETAS BLANCAS)
+# CONFIGURACIÓN VISUAL (REPLICA EXACTA DE LA IMAGEN)
 # =========================
-st.set_page_config(page_title="Etsy AI Listing Generator", layout="wide", page_icon="📱")
+st.set_page_config(page_title="Etsy App Master", layout="wide", page_icon="📱")
 
 st.markdown("""
     <style>
-    /* Fondo oscuro de la App (Igual a la imagen de referencia) */
+    /* Fondo principal Azul Noche Profundo (De tu imagen) */
     .stApp {
-        background-color: #161622;
-        color: #FFFFFF;
+        background-color: #1a1a24;
+        color: #ffffff;
         font-family: 'Inter', sans-serif;
     }
     
-    /* Headers principales en blanco */
-    h1, h2, h3 { color: #FFFFFF !important; font-weight: 800; }
-    
-    /* Textos generales en blanco/gris claro */
-    p, span, label { color: #E2E8F0 !important; }
+    /* Headers en Blanco */
+    h1, h2, h3, h4 { color: #ffffff !important; font-weight: 800; }
+    p, span, label { color: #f0f0f5 !important; font-weight: 500;}
 
-    /* TARJETAS BLANCAS REDONDEADAS (Estilo de la imagen) */
-    .white-card {
-        background-color: #FFFFFF;
-        color: #1A1A1A;
-        border-radius: 35px;
-        padding: 30px;
+    /* Simulación de Pantallas de App (Tarjetas Blancas) */
+    .app-screen {
+        background-color: #ffffff;
+        border-radius: 40px;
+        padding: 35px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         margin-bottom: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        color: #1a1a24;
     }
-    .white-card h1, .white-card h2, .white-card h3, .white-card h4, .white-card p, .white-card li {
-        color: #1A1A1A !important;
-    }
-
-    /* Estilizar Inputs, Text Areas y Selects para que parezcan de App */
-    .stTextInput>div>div>input, .stSelectbox>div>div>select, .stTextArea>div>div>textarea, .stNumberInput>div>div>input {
-        background-color: #FFFFFF;
-        border-radius: 20px;
-        color: #1A1A1A !important;
-        border: 2px solid #E2E8F0;
-        padding: 10px 15px;
+    /* El texto dentro de las tarjetas blancas debe ser oscuro */
+    .app-screen h1, .app-screen h2, .app-screen h3, .app-screen h4, .app-screen p, .app-screen li, .app-screen b {
+        color: #1a1a24 !important;
     }
     
-    /* BOTONES NARANJAS (Igual a la imagen) */
+    /* Botones Color Durazno (De tu imagen) */
     .stButton > button {
-        background-color: #FF9B70;
-        color: #FFFFFF !important;
-        border-radius: 25px;
-        border: none;
-        padding: 10px 24px;
-        font-weight: 700;
-        font-size: 16px;
-        box-shadow: 0 4px 15px rgba(255, 155, 112, 0.4);
-        transition: all 0.3s;
+        background-color: #ffb185 !important;
+        color: #ffffff !important;
+        border-radius: 30px !important;
+        border: none !important;
+        padding: 12px 28px !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        box-shadow: 0 8px 20px rgba(255, 177, 133, 0.4) !important;
+        transition: all 0.3s ease !important;
         width: 100%;
     }
     .stButton > button:hover {
-        background-color: #FF804D;
-        box-shadow: 0 6px 20px rgba(255, 155, 112, 0.6);
+        background-color: #ff9a60 !important;
+        transform: translateY(-2px);
     }
 
-    /* Menú Lateral (Navegación tipo App) */
-    .stSidebar { background-color: #1E1E2D; }
+    /* Inputs y Selects */
+    .stTextInput>div>div>input, .stSelectbox>div>div>select, .stTextArea>div>div>textarea, .stNumberInput>div>div>input {
+        background-color: #f4f4f8;
+        border-radius: 20px;
+        color: #1a1a24 !important;
+        border: 2px solid #e0e0e0;
+        padding: 10px 15px;
+    }
+
+    /* Menú Lateral */
+    .stSidebar { background-color: #232332; }
     .stSidebar [data-testid="stSidebarNav"] { padding-top: 20px; }
-    .stSidebar [data-testid="stMarkdownContainer"] p, .stSidebar h3 { color: #FFFFFF !important; }
+    .stSidebar [data-testid="stMarkdownContainer"] p { color: #ffffff !important; font-size: 16px; font-weight: bold;}
     
-    /* CALENDARIO VISUAL DE LA APP */
-    .cal-container {
-        background-color: #FFFFFF;
-        border-radius: 30px;
-        padding: 20px;
-        color: #1A1A1A;
-        width: 100%;
-        max-width: 350px;
-        margin: 0 auto;
+    /* Calendario Visual CSS */
+    .cal-box {
+        background-color: #ffffff; border-radius: 35px; padding: 25px; color: #1a1a24; margin: auto; max-width: 350px;
     }
     .cal-header {
-        text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 15px; color: #1A1A1A;
+        text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; color: #1a1a24;
     }
-    .cal-grid {
-        display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;
-    }
-    .cal-day-name { font-size: 12px; color: #888; font-weight: bold; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+    .cal-day-header { font-size: 12px; color: #888; font-weight: bold; }
     .cal-day {
-        height: 35px; width: 35px; line-height: 35px; margin: auto; border-radius: 50%; font-size: 14px; color: #1A1A1A;
+        height: 35px; width: 35px; line-height: 35px; margin: auto; border-radius: 50%; font-size: 14px; color: #1a1a24; font-weight: 500;
     }
     .cal-event {
-        background-color: #FF9B70; color: #FFFFFF; font-weight: bold; box-shadow: 0 2px 8px rgba(255,155,112,0.5);
+        background-color: #1a1a24; color: #ffffff;
+    }
+    .cal-event-orange {
+        background-color: #ffb185; color: #ffffff; box-shadow: 0 4px 10px rgba(255, 177, 133, 0.5);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# Ilustración de Perro Minimalista (Reemplazando al gato de la imagen)
-DOG_IMG_URL = "https://cdn-icons-png.flaticon.com/512/1900/1900137.png"
+# =========================
+# PERRO MINIMALISTA (Reemplazo del Gato dibujado en SVG puro)
+# =========================
+PERRO_SVG = """
+<div style="display: flex; justify-content: center; margin-bottom: 10px;">
+    <svg width="180" height="180" viewBox="0 0 100 100">
+        <path d="M 25 45 Q 10 20 30 15 Z" fill="#1a1a24"/>
+        <path d="M 75 45 Q 90 20 70 15 Z" fill="#1a1a24"/>
+        <path d="M 20 45 C 15 20, 35 15, 50 18 C 65 15, 85 20, 80 45 C 95 65, 85 90, 50 90 C 15 90, 5 65, 20 45 Z" fill="#1a1a24"/>
+        <ellipse cx="35" cy="45" rx="9" ry="13" fill="white"/>
+        <ellipse cx="65" cy="45" rx="9" ry="13" fill="white"/>
+        <circle cx="35" cy="45" r="4" fill="#1a1a24"/>
+        <circle cx="65" cy="45" r="4" fill="#1a1a24"/>
+        <path d="M 45 65 Q 50 60 55 65 Q 58 75 50 78 Q 42 75 45 65 Z" fill="white"/>
+        <circle cx="50" cy="65" r="2.5" fill="#1a1a24"/>
+        <circle cx="20" cy="70" r="1.5" fill="white"/>
+        <circle cx="80" cy="70" r="1.5" fill="white"/>
+    </svg>
+</div>
+"""
 
 # =========================
 # SESSION STATE INIT
@@ -122,15 +134,13 @@ def load_reader():
 reader = load_reader()
 
 # =========================
-# FUNCIONES PRINCIPALES (TU CÓDIGO ORIGINAL INTACTO)
+# FUNCIONES PRINCIPALES (TU CÓDIGO INTACTO)
 # =========================
-
 def extraer_texto_ocr(reader, image):
     image_np = np.array(image)
     try:
         resultados = reader.readtext(image_np)
     except Exception as e:
-        st.error(f"OCR error: {e}")
         return ""
     textos = [r[1] for r in resultados if len(r) >= 2]
     return " ".join(textos)
@@ -149,8 +159,7 @@ def extraer_keywords_texto(texto, max_keywords=12):
     return resultado
 
 def recomendar_producto_ganador(texto, niche):
-    texto = texto.lower()
-    niche = niche.lower()
+    texto, niche = texto.lower(), niche.lower()
     recomendaciones = []
     if any(w in texto or w in niche for w in ["navidad", "christmas", "xmas", "catmas", "ornament"]):
         recomendaciones.extend(["Ceramic Ornament (Adorno Navideño)", "Gildan 18000 (Ugly Sweater Style)"])
@@ -186,19 +195,9 @@ def generar_titulos_venta(keywords, product, niche, texto_detectado, lang="en"):
 
 def generar_tags_etsy(keywords, product, niche, lang="en"):
     if lang == "en":
-        tags_base = [
-            f"custom {product}"[:20], f"{niche} gift"[:20], f"personalized {product}"[:20],
-            f"gift for {niche}"[:20], "custom name gift"[:20], f"{keywords[0]} {product}"[:20] if keywords else "trendy gift",
-            "unique present"[:20], f"funny {niche} gift"[:20], f"{niche} appreciation"[:20],
-            "birthday gift"[:20], "customized present"[:20], f"best {niche} idea"[:20], "etsy trendy design"[:20]
-        ]
+        tags_base = [f"custom {product}"[:20], f"{niche} gift"[:20], f"personalized {product}"[:20], f"gift for {niche}"[:20], "custom name gift"[:20], f"{keywords[0]} {product}"[:20] if keywords else "trendy gift", "unique present"[:20], f"funny {niche} gift"[:20], f"{niche} appreciation"[:20], "birthday gift"[:20], "customized present"[:20], f"best {niche} idea"[:20], "etsy trendy design"[:20]]
     else:
-        tags_base = [
-            f"{product} custom"[:20], f"regalo {niche}"[:20], f"{product} personal"[:20],
-            f"regalo para {niche}"[:20], "regalo con nombre"[:20], f"{keywords[0]} {product}"[:20] if keywords else "regalo tendencia",
-            "regalo unico"[:20], f"regalo gracioso"[:20], f"aprecio {niche}"[:20],
-            "regalo cumpleanos"[:20], "detalle personalizado"[:20], f"idea {niche}"[:20], "etsy diseno"[:20]
-        ]
+        tags_base = [f"{product} custom"[:20], f"regalo {niche}"[:20], f"{product} personal"[:20], f"regalo para {niche}"[:20], "regalo con nombre"[:20], f"{keywords[0]} {product}"[:20] if keywords else "regalo tendencia", "regalo unico"[:20], f"regalo gracioso"[:20], f"aprecio {niche}"[:20], "regalo cumpleanos"[:20], "detalle personalizado"[:20], f"idea {niche}"[:20], "etsy diseno"[:20]]
     return list(dict.fromkeys(tags_base))[:13]
 
 def generar_descripcion_vendedora(product, niche, texto_detectado, lang="en"):
@@ -235,66 +234,62 @@ Si pides un producto físico y deseas ver el arte antes de imprimir, por favor c
 📦 Procesado en 2-5 días hábiles. ¡Rastreo incluido!"""
 
 # =========================
-# MENÚ DE NAVEGACIÓN LATERAL (ESTILO APP)
+# MENÚ DE NAVEGACIÓN
 # =========================
-st.sidebar.markdown(f"<div style='text-align: center;'><img src='{DOG_IMG_URL}' width='80' style='filter: invert(1); margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-st.sidebar.markdown("<h2 style='text-align: center;'>Etsy App</h2>", unsafe_allow_html=True)
+st.sidebar.markdown(PERRO_SVG, unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='text-align:center;'>Etsy App</h2>", unsafe_allow_html=True)
 
-menu = st.sidebar.radio("Navegación:", [
-    "🏠 Dashboard & Calendario",
-    "1️⃣ Subir diseño (OCR)",
-    "2️⃣ Perfil de Tienda",
-    "3️⃣ Selección de Producto",
-    "4️⃣ Generador SEO Etsy",
-    "💬 Flujo de Muestras",
-    "📦 Recursos Rápidos",
-    "💰 Calculadora POD",
-    "🚨 Radar Legal",
-    "📅 Calendario POD",
-    "📈 Auditoría de Tienda",
-    "🔮 Radar Dinámico",
-    "💡 Máquina de Ideas"
+menu = st.sidebar.radio("Navegación", [
+    "🏠 Inicio & Calendario",
+    "🔍 1. Subir Diseño (OCR)",
+    "🛒 2. Catálogo y Nichos",
+    "🚀 3. Generador SEO",
+    "💬 4. Muestras Add-On",
+    "💰 5. Calculadora Real",
+    "⚖️ 6. Radar Legal",
+    "📈 7. Auditoría de Tienda",
+    "💡 8. Ideas y Tendencias"
 ])
 
 # =========================
-# RUTEO DE PÁGINAS (CONTENIENDO TUS 600 LÍNEAS EXACTAS)
+# PANTALLAS DE LA APP
 # =========================
 
-if menu == "🏠 Dashboard & Calendario":
-    st.markdown("<h1>Hola, Estratega 👋</h1>", unsafe_allow_html=True)
+if menu == "🏠 Inicio & Calendario":
+    st.markdown("<h1>Inicio</h1>", unsafe_allow_html=True)
     
-    col_dash1, col_dash2 = st.columns([1, 1.5])
+    col1, col2 = st.columns([1, 1.2])
     
-    with col_dash1:
+    with col1:
         st.markdown(f"""
-        <div class="white-card" style="text-align: center;">
-            <img src="{DOG_IMG_URL}" width="120" style="margin-bottom: 15px;">
-            <h2>Tu Mascota POD</h2>
-            <p>Lista para analizar diseños y buscar tendencias.</p>
+        <div class="app-screen" style="text-align: center;">
+            {PERRO_SVG}
+            <h2>¡Hola de nuevo!</h2>
+            <p style="color:#1a1a24 !important;">Estamos felices de verte. Tu mascota POD está lista para analizar tendencias.</p>
         </div>
         """, unsafe_allow_html=True)
         
-    with col_dash2:
-        # CALENDARIO VISUAL ESTILO IMAGEN 8
-        mes_actual_nombre = datetime.datetime.now().strftime("%B")
+    with col2:
+        mes_actual = datetime.datetime.now().strftime("%B")
         st.markdown(f"""
-        <div class="cal-container">
-            <div class="cal-header">🗓️ {mes_actual_nombre.capitalize()} (Fechas Clave)</div>
+        <div class="cal-box">
+            <div class="cal-header">🗓️ {mes_actual.capitalize()} (Fechas Clave)</div>
             <div class="cal-grid">
-                <div class="cal-day-name">L</div><div class="cal-day-name">M</div><div class="cal-day-name">X</div><div class="cal-day-name">J</div><div class="cal-day-name">V</div><div class="cal-day-name">S</div><div class="cal-day-name">D</div>
+                <div class="cal-day-header">L</div><div class="cal-day-header">M</div><div class="cal-day-header">X</div><div class="cal-day-header">J</div><div class="cal-day-header">V</div><div class="cal-day-header">S</div><div class="cal-day-header">D</div>
                 <div></div><div></div><div></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div>
-                <div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day cal-event">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day">11</div>
-                <div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day cal-event">14</div><div class="cal-day">15</div><div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div>
-                <div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day cal-event">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day">25</div>
-                <div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day cal-event">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div></div>
+                <div class="cal-day">5</div><div class="cal-day cal-event">6</div><div class="cal-day">7</div><div class="cal-day cal-event-orange">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day">11</div>
+                <div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day cal-event">16</div><div class="cal-day">17</div><div class="cal-day">18</div>
+                <div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day cal-event-orange">24</div><div class="cal-day">25</div>
+                <div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div></div>
             </div>
-            <p style="text-align:center; font-size:12px; margin-top:15px; color:#888;">Naranja: Días límite de subida para el algoritmo.</p>
+            <p style="text-align:center; font-size:11px; margin-top:10px; color:#888;">Naranja: Subida urgente. Negro: Fin de revisión.</p>
         </div>
         """, unsafe_allow_html=True)
 
-elif menu == "1️⃣ Subir diseño (OCR)":
-    st.markdown("<h1>1️⃣ Subir diseño</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+elif menu == "🔍 1. Subir Diseño (OCR)":
+    st.markdown("<h1>1️⃣ Analizar Diseño</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
+    
     uploaded_file = st.file_uploader("Sube tu diseño para analizarlo", type=["png", "jpg", "jpeg"])
 
     if uploaded_file:
@@ -316,246 +311,120 @@ elif menu == "1️⃣ Subir diseño (OCR)":
     if st.session_state["detected_text"]:
         st.subheader("Texto detectado")
         st.session_state["detected_text"] = st.text_area(
-            "Edita el texto si el OCR cometió un error (Esto será la base de tu SEO):",
+            "Edita el texto si el OCR cometió un error:",
             st.session_state["detected_text"],
             height=80
         )
-        st.success("Texto listo para análisis.")
+        st.success("Texto guardado en memoria.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif menu == "2️⃣ Perfil de Tienda":
-    st.markdown("<h1>2️⃣ Perfil de Tienda y Micro-Nicho</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+elif menu == "🛒 2. Catálogo y Nichos":
+    st.markdown("<h1>2️⃣ Perfil de Tienda</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
+    
     col_tienda1, col_tienda2 = st.columns(2)
-
     with col_tienda1:
         tienda_seleccionada = st.radio("Selecciona la Tienda a trabajar:", ["🐾 Tienda POD Mascotas", "💌 Tienda Digital (Invitaciones)"])
-
     with col_tienda2:
         if tienda_seleccionada == "🐾 Tienda POD Mascotas":
             subnicho = st.selectbox("Selecciona el Sub-Nicho:", [
-                "Mascotas Fallecidas (Memorial / Rainbow Bridge)",
-                "Mascotas de Servicio Médico / Apoyo Emocional",
-                "Mascotas Vivas (Cumpleaños / Uso Diario)",
-                "Rescate / Adopción (Gotcha Day)"
+                "Mascotas Fallecidas (Memorial / Rainbow Bridge)", "Mascotas de Servicio Médico / Apoyo Emocional", "Mascotas Vivas (Cumpleaños / Uso Diario)", "Rescate / Adopción (Gotcha Day)"
             ])
             estilo_arte = st.selectbox("Estilo de Personalización:", [
-                "Acuarela Digital (Watercolor Portrait)",
-                "Line Art Minimalista",
-                "Caricatura / Cartoon",
-                "Pintura al Óleo Digital"
+                "Acuarela Digital (Watercolor Portrait)", "Line Art Minimalista", "Caricatura / Cartoon", "Pintura al Óleo Digital"
             ])
             st.session_state["niche"] = f"{subnicho} estilo {estilo_arte}"
         else:
             subnicho = st.selectbox("Selecciona el Sub-Nicho:", [
-                "Fiesta de Divorcio / Inicio de Soltería",
-                "Cumpleaños de Mascotas (Paw-ty)",
-                "Conmemorativos / Celebración de Vida",
-                "Despedida de Soltera Anti-Tradicional"
+                "Fiesta de Divorcio / Inicio de Soltería", "Cumpleaños de Mascotas (Paw-ty)", "Conmemorativos / Celebración de Vida", "Despedida de Soltera Anti-Tradicional"
             ])
             estilo_arte = st.selectbox("Estilo Visual:", [
-                "Acuarela Digital Elegante",
-                "Sarcástico / Divertido (Texto Bold)",
-                "Minimalista / Estético",
-                "Boho / Floral"
+                "Acuarela Digital Elegante", "Sarcástico / Divertido (Texto Bold)", "Minimalista / Estético", "Boho / Floral"
             ])
             st.session_state["niche"] = f"{subnicho} estilo {estilo_arte}"
 
-    st.info(f"🎯 **Enfoque actual:** {tienda_seleccionada} ➔ {subnicho} ({estilo_arte})")
-    st.session_state["tienda_seleccionada"] = tienda_seleccionada # Guardar para el siguiente paso
-    st.markdown("</div>", unsafe_allow_html=True)
-
-elif menu == "3️⃣ Selección de Producto":
-    st.markdown("<h1>3️⃣ Selección de Producto</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-    
-    tienda_seleccionada = st.session_state.get("tienda_seleccionada", "🐾 Tienda POD Mascotas")
-
+    st.markdown("---")
+    st.subheader("3️⃣ Selección de Producto")
     if tienda_seleccionada == "🐾 Tienda POD Mascotas":
-        st.write("**Catálogo Estratégico Printify:**")
-        productos_mascotas = [
-            "Velveteen Plush Blanket (Ideal para Memorial)",
-            "White Ceramic Mug 15oz (Dueños de Apoyo Emocional)",
-            "Square Canvas (Retrato Acuarela Premium)",
-            "Pet Bandana (Cumpleaños Mascota)",
-            "Acrylic Plaque (Memorial Transparente)",
-            "Gildan 18500 Hoodie (Ropa de Dueño)"
-        ]
+        productos_mascotas = ["Velveteen Plush Blanket", "White Ceramic Mug 15oz", "Square Canvas", "Pet Bandana", "Acrylic Plaque", "Gildan 18500 Hoodie"]
         cols_prod = st.columns(3)
         for idx, producto in enumerate(productos_mascotas):
             with cols_prod[idx % 3]:
-                if st.button(producto):
-                    st.session_state["product"] = producto
+                if st.button(producto): st.session_state["product"] = producto
     else:
-        st.write("**Catálogo Digital:**")
-        productos_digitales = [
-            "Digital Invitation (Canva Template)",
-            "Evite / Mobile Invitation (Smartphone Size)",
-            "Printable Memorial Sign",
-            "Digital Watercolor Portrait File"
-        ]
+        productos_digitales = ["Digital Invitation Canva", "Evite Mobile", "Printable Memorial Sign", "Digital Portrait File"]
         cols_dig = st.columns(2)
         for idx, producto in enumerate(productos_digitales):
             with cols_dig[idx % 2]:
-                if st.button(producto):
-                    st.session_state["product"] = producto
+                if st.button(producto): st.session_state["product"] = producto
 
     if st.session_state.get("product"):
         st.success(f"📦 Producto seleccionado: {st.session_state['product']}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif menu == "4️⃣ Generador SEO Etsy":
-    st.markdown("<h1>4️⃣ Generador SEO Experto para Etsy</h1>", unsafe_allow_html=True)
+elif menu == "🚀 3. Generador SEO":
+    st.markdown("<h1>🚀 Generador SEO</h1>", unsafe_allow_html=True)
+    
     if st.session_state["detected_text"] and st.session_state.get("product"):
-        if st.button("🚀 Generar Listado Optimizado"):
-            with st.spinner("Creando SEO con intención de regalo..."):
-                product = st.session_state["product"]
-                niche = st.session_state.get("niche", "General")
-                keyword_text = st.session_state["detected_text"].strip()
-                base_keywords = extraer_keywords_texto(keyword_text)
-                if not base_keywords: base_keywords = [niche, product, "gift"]
+        if st.button("Generar Listado Optimizado"):
+            st.session_state["generar_seo_ahora"] = True
+            
+        if st.session_state.get("generar_seo_ahora"):
+            st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
+            product = st.session_state["product"]
+            niche = st.session_state.get("niche", "General")
+            keyword_text = st.session_state["detected_text"].strip()
+            base_keywords = extraer_keywords_texto(keyword_text)
+            if not base_keywords: base_keywords = [niche, product, "gift"]
 
-                st.session_state["tags_generados"] = generar_tags_etsy(base_keywords, product, niche, "en")
+            st.session_state["tags_generados"] = generar_tags_etsy(base_keywords, product, niche, "en")
 
-                tab_en, tab_es = st.tabs(["🇺🇸 Inglés (Copia esto en Etsy EUA)", "🇪🇸 Español (Para tu Referencia)"])
+            st.markdown("<h2>🇺🇸 SEO en Inglés (EUA)</h2>", unsafe_allow_html=True)
+            titulos_en = generar_titulos_venta(base_keywords, product, niche, keyword_text, "en")
+            for t, score in titulos_en:
+                if score >= 95: st.success(f"⭐ **{score}% MATCH:**\n{t}")
+                else: st.info(f"🔥 **{score}% MATCH:**\n{t}")
 
-                with tab_en:
-                    st.info("⚠️ COPIA ESTOS DATOS EN ETSY. El mercado de EUA busca exclusivamente en inglés.")
-                    st.subheader("📌 Títulos Optimizados")
-                    st.markdown("Copia el título con el mayor porcentaje de coincidencia estratégica:")
-                    titulos_en = generar_titulos_venta(base_keywords, product, niche, keyword_text, "en")
-                    for t, score in titulos_en:
-                        if score >= 95:
-                            st.success(f"⭐ **{score}% MATCH (Mejor Opción):**\n\n{t}")
-                        else:
-                            st.info(f"🔥 **{score}% MATCH:**\n\n{t}")
-
-                    st.subheader("🏷️ 13 Etiquetas (Tags en Inglés)")
-                    tags_en = st.session_state["tags_generados"]
-                    for tag in tags_en:
-                        st.markdown(f"✅ `{tag}`")
-                    st.caption("Copia todos de un solo clic para pegarlos en Etsy (separados por coma):")
-                    st.code(", ".join(tags_en), language="text")
-                    
-                    st.subheader("📝 Descripción de Alta Conversión")
-                    st.markdown("Incluye la estrategia de *Muestra Digital Opcional (Proof Add-on)* para aumentar tu margen.")
-                    st.code(generar_descripcion_vendedora(product, niche, keyword_text, "en"), language="text")
-
-                with tab_es:
-                    st.info("💡 Usa esto solo para entender la estrategia detrás del SEO en inglés.")
-                    st.subheader("📌 Títulos Optimizados")
-                    titulos_es = generar_titulos_venta(base_keywords, product, niche, keyword_text, "es")
-                    for t, score in titulos_es:
-                        st.write(f"**{score}% MATCH:** {t}")
-                    st.subheader("🏷️ 13 Etiquetas (Tags en Español)")
-                    tags_es = generar_tags_etsy(base_keywords, product, niche, "es")
-                    st.code(", ".join(tags_es), language="text")
-                    st.subheader("📝 Descripción")
-                    st.text_area("Descripción (ES):", generar_descripcion_vendedora(product, niche, keyword_text, "es"), height=300)
+            st.subheader("🏷️ Etiquetas (Copia separadas por coma)")
+            st.code(", ".join(st.session_state["tags_generados"]), language="text")
+            
+            st.subheader("📝 Descripción")
+            st.code(generar_descripcion_vendedora(product, niche, keyword_text, "en"), language="text")
+            st.markdown("</div>", unsafe_allow_html=True)
     else:
-        st.warning("⚠️ Necesitas detectar el texto de una imagen y seleccionar un producto primero.")
+        st.warning("⚠️ Necesitas detectar texto y seleccionar un producto primero.")
 
-elif menu == "💬 Flujo de Muestras":
-    st.markdown("<h1>💬 Flujo de Muestras y Add-On (Monetización)</h1>", unsafe_allow_html=True)
-    st.markdown("Automatiza tu atención al cliente y monetiza las revisiones de diseño. Los Top Sellers no dan su tiempo de revisión gratis.")
-
-    tab_proof1, tab_proof2, tab_addon = st.tabs([
-        "💬 Mensaje: Envío de Muestra", 
-        "⏰ Mensaje: Recordatorio 24h", 
-        "💰 Generador: Listado Add-On"
-    ])
-
-    with tab_proof1:
-        st.markdown("**Usa esto cuando el cliente PAGA por la muestra o compra un producto digital caro (como una invitación personalizada).**")
-        st.code("""Hi [Nombre del Cliente],
-
-Thank you so much for your order! 💛 
-
-I have finished the digital design for your custom piece. I have attached the proof (preview) to this message so you can see exactly how it will look.
-
-Please review the spelling and the design. If everything looks perfect, just reply with "APPROVED" and I will send it straight to production! If you need any minor tweaks, let me know.
-
-Best regards,
-[Tu Nombre]""", language="text")
-
-    with tab_proof2:
-        st.markdown("**Usa esto si el cliente no responde en 24 horas (Para evitar que Etsy te penalice por envíos tardíos).**")
-        st.code("""Hi [Nombre del Cliente],
-
-Just checking in! I sent your design proof yesterday. 
-
-To ensure your order arrives on time, please let me know if the design is approved by [Hora/Fecha]. If I don't hear back by then, I will proceed with printing as shown in the proof to avoid any shipping delays.
-
-Thank you!""", language="text")
-
-    with tab_addon:
-        st.info("💡 **ESTRATEGIA:** Crea un ÚNICO listado en tu tienda con esta información. Ponle un precio de $2.99 a $4.99 USD y configúralo como 'Producto Digital' (Digital Download).")
-        st.subheader("📸 Sugerencia de Imagen (Mockup)")
-        st.markdown("Crea una imagen sencilla y estética en Canva. Fondo de color pastel, y letras grandes y legibles que digan:\n\n**'DIGITAL PROOF ADD-ON. See your artwork before it prints!'**\n*(Agrega un ícono de una lupa o un checkmark ✅)*.")
-        st.subheader("📌 Título del Listado en Inglés")
-        st.code("Digital Proof Add-On for Custom Orders, Artwork Preview, See Design Before Printing, Optional Digital Proof, Pet Portrait Proof Add On", language="text")
-        st.subheader("🏷️ 13 Etiquetas (Tags)")
-        st.code("digital proof, artwork preview, add on listing, see before printing, custom order proof, design preview, optional add on, pet portrait proof, custom gift proof, digital download, rush proof, approval required, order upgrade", language="text")
-        st.subheader("📝 Descripción del Listado (Copia y Pega)")
-        st.code("""⚠️ PLEASE READ: THIS IS AN ADD-ON SERVICE, NOT A PHYSICAL PRODUCT.
-
-Purchase this listing IN ADDITION to your custom physical product if you wish to see a digital preview (proof) of the artwork before it is sent to production. 
-
-To keep our prices low and production times incredibly fast, proofs are not automatically included with our standard physical items. Our expert artists use their best judgment to create stunning pieces based on your photos and notes. However, if you prefer to review and approve the design first to request minor tweaks, this add-on is for you!
-
-✨ HOW IT WORKS ✨
-1. Add your physical custom item (mug, canvas, blanket, etc.) to your cart.
-2. Add this "Digital Proof Add-On" listing to your cart as well.
-3. Complete your checkout.
-4. Within 24-48 hours, we will send you a digital preview of your design via Etsy Messages.
-5. You can approve it or request one (1) minor revision. 
-
-*Note: Purchasing a proof may extend your final delivery date slightly, as we will wait for your approval before printing.*""", language="text")
-
-elif menu == "📦 Recursos Rápidos":
-    st.markdown("<h1>5️⃣ Recursos Rápidos</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("🖼️ Mockups Populares (Placeit)")
-        mockups = {
-            "👕 T-shirt / Camiseta": "https://placeit.net/c/mockups/stages/t-shirt-mockup",
-            "🧥 Hoodie / Sudadera": "https://placeit.net/c/mockups/stages/hoodie-mockup",
-            "☕ Mug / Taza Cerámica": "https://placeit.net/c/mockups/stages/mug-mockup",
-            "🥤 Tumbler / Vaso Térmico": "https://placeit.net/c/mockups/stages/tumbler-mockup",
-            "🖼️ Canvas / Lienzo": "https://placeit.net/c/mockups/stages/canvas-mockup",
-            "🛌 Blanket / Cobija": "https://placeit.net/c/mockups/stages/blanket-mockup",
-            "🎄 Ornament / Adorno": "https://placeit.net/c/mockups/stages/ornament-mockup",
-            "👜 Tote Bag / Bolsa": "https://placeit.net/c/mockups/stages/tote-bag-mockup"
-        }
-        for name, url in mockups.items():
-            st.markdown(f"[{name}]({url})")
+elif menu == "💬 4. Muestras Add-On":
+    st.markdown("<h1>💬 Flujo de Muestras</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
+    st.markdown("<h4>Mensaje: Envío de Muestra (Cliente Pagó)</h4>", unsafe_allow_html=True)
+    st.code("Hi [Nombre],\nThank you for your order! 💛\nI attached the proof (preview) for your custom piece. Please review the spelling and design. Reply 'APPROVED'.\nBest, [Tu Nombre]", language="text")
+    
+    st.markdown("---")
+    st.markdown("<h4>💰 Listado Add-On ($4.99 USD)</h4>", unsafe_allow_html=True)
+    st.markdown("**Título:**")
+    st.code("Digital Proof Add-On for Custom Orders, Artwork Preview, Optional Digital Proof", language="text")
+    st.markdown("**Tags:**")
+    st.code("digital proof, artwork preview, add on listing, custom order proof", language="text")
+    st.markdown("**Descripción:**")
+    st.code("⚠️ THIS IS AN ADD-ON SERVICE, NOT A PHYSICAL PRODUCT.\nPurchase this listing IN ADDITION to your custom item to see a digital preview...", language="text")
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif menu == "💰 Calculadora POD":
-    st.markdown("<h1>💰 Calculadora de Rentabilidad (Estrategia de Envío)</h1>", unsafe_allow_html=True)
-    st.markdown("Calcula tu ganancia real comparando la estrategia de **Envío Gratis** vs **Cobrar Envío**.")
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-    
+elif menu == "💰 5. Calculadora Real":
+    st.markdown("<h1>💰 Calculadora de Rentabilidad</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
     col_calc1, col_calc2 = st.columns(2)
 
     with col_calc1:
-        st.subheader("📦 Costos (Printify)")
         costo_printify = st.number_input("Costo de Producción $", min_value=0.0, value=12.50, step=0.5)
         envio_printify = st.number_input("Costo de Envío Printify $", min_value=0.0, value=4.79, step=0.5)
 
     with col_calc2:
-        st.subheader("🛍️ Ingresos (Etsy)")
         precio_venta = st.number_input("Precio del Producto $", min_value=0.0, value=24.99, step=0.5)
         estrategia_envio = st.radio("Estrategia de Envío al Cliente:", ["Cobrar Envío Aparte", "Envío Gratis (Absorbido)"])
-        
-        if estrategia_envio == "Cobrar Envío Aparte":
-            cobro_envio_etsy = st.number_input("¿Cuánto le cobrarás de envío al cliente? $", min_value=0.0, value=5.99, step=0.5)
-        else:
-            cobro_envio_etsy = 0.0
-            st.info("💡 Consejo: Asegúrate de que el Precio del Producto sea lo suficientemente alto para cubrir tu costo de producción Y el envío de Printify.")
+        cobro_envio_etsy = st.number_input("¿Cuánto cobrarás de envío? $", value=5.99) if estrategia_envio == "Cobrar Envío Aparte" else 0.0
 
-    if st.button("📊 Calcular Ganancia Real"):
+    if st.button("Calcular Ganancia Real"):
         ingreso_total = precio_venta + cobro_envio_etsy
         etsy_fees = 0.45 + (ingreso_total * 0.095)
         costo_total = costo_printify + envio_printify + etsy_fees
@@ -563,216 +432,78 @@ elif menu == "💰 Calculadora POD":
         margen_porcentaje = (ganancia_neta / ingreso_total) * 100 if ingreso_total > 0 else 0
 
         st.markdown("---")
-        col_res1, col_res2, col_res3 = st.columns(3)
-        col_res1.metric("Ingreso Bruto (Paga el Cliente)", f"${ingreso_total:.2f}")
-        col_res2.metric("Tarifas Retenidas por Etsy", f"${etsy_fees:.2f}")
-        col_res3.metric("Costo Printify (Prod + Envío)", f"${(costo_printify + envio_printify):.2f}")
+        st.write(f"**Ingreso Bruto:** ${ingreso_total:.2f}")
+        st.write(f"**Tarifas Etsy:** ${etsy_fees:.2f}")
         
-        st.write("")
-        
-        col_res4, col_res5 = st.columns(2)
         if margen_porcentaje >= 30:
-            col_res4.metric("Ganancia Neta (Directo a tu bolsa)", f"${ganancia_neta:.2f}", "Margen Excelente")
-            col_res5.metric("Margen de Beneficio", f"{margen_porcentaje:.1f}%", "Aprobado para Escalar")
-            st.success("🔥 ¡Estrategia sólida! Tienes un margen mayor al 30%. Tienes espacio para pagar Etsy Ads ($3 al día) y seguir ganando dinero.")
+            st.success(f"🔥 Ganancia Neta: **${ganancia_neta:.2f}** ({margen_porcentaje:.1f}%). Aprobado para Ads.")
         elif 15 <= margen_porcentaje < 30:
-            col_res4.metric("Ganancia Neta", f"${ganancia_neta:.2f}")
-            col_res5.metric("Margen de Beneficio", f"{margen_porcentaje:.1f}%", delta_color="off")
-            st.warning("⚠️ Margen ajustado. Está bien para conseguir tus primeras ventas y reseñas (Reviews), pero NO uses Ads con este producto porque terminarás perdiendo dinero.")
+            st.warning(f"⚠️ Ganancia Neta: **${ganancia_neta:.2f}** ({margen_porcentaje:.1f}%). No uses Ads.")
         else:
-            col_res4.metric("Ganancia Neta", f"${ganancia_neta:.2f}", "-Riesgo de Pérdida")
-            col_res5.metric("Margen de Beneficio", f"{margen_porcentaje:.1f}%", "-Cambia tu estrategia")
-            st.error("🚨 ¡Alerta roja! Estás ganando muy poco o directamente trabajando gratis. Sube el precio del producto o cobra el envío.")
+            st.error(f"🚨 Ganancia Neta: **${ganancia_neta:.2f}** ({margen_porcentaje:.1f}%). Sube el precio.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif menu == "🚨 Radar Legal":
-    st.markdown("<h1>🚨 Radar Legal y Protección de Tienda</h1>", unsafe_allow_html=True)
-    st.markdown("Evita suspensiones. La IA cruzará tu texto detectado y tus tags generados con nuestra Lista Negra.")
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-
+elif menu == "⚖️ 6. Radar Legal":
+    st.markdown("<h1>⚖️ Radar Legal (Trademarks)</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
+    
     texto_automatico = st.session_state.get("detected_text", "")
-    if "tags_generados" in st.session_state:
-        texto_automatico += " " + " ".join(st.session_state["tags_generados"])
+    if "tags_generados" in st.session_state: texto_automatico += " " + " ".join(st.session_state["tags_generados"])
 
-    texto_a_revisar = st.text_area("Texto a revisar (Autocompletado automáticamente):", value=texto_automatico, height=100)
+    texto_a_revisar = st.text_area("Texto a revisar:", value=texto_automatico, height=100)
 
-    TRADEMARK_BLACKLIST = [
-        "disney", "marvel", "star wars", "nike", "harry potter", "velcro", 
-        "onesie", "jeep", "taylor swift", "stanley", "snoopy", "mickey", 
-        "nfl", "nba", "barbie", "lego", "tupperware", "taser", "chapstick", 
-        "super bowl", "peanuts", "pokemon", "hello kitty", "bluey", "shrek"
-    ]
+    TRADEMARK_BLACKLIST = ["disney", "marvel", "star wars", "nike", "harry potter", "velcro", "onesie", "jeep", "taylor swift", "stanley", "snoopy", "mickey", "nfl", "nba", "barbie", "lego", "tupperware", "taser", "chapstick", "super bowl", "peanuts", "pokemon", "hello kitty", "bluey", "shrek"]
 
-    col_legal1, col_legal2 = st.columns([2, 1])
-
-    with col_legal1:
-        if st.button("🛡️ Escanear Listado Completo"):
-            if texto_a_revisar:
-                texto_limpio = texto_a_revisar.lower()
-                alertas = [marca for marca in TRADEMARK_BLACKLIST if marca in texto_limpio]
-                
-                if alertas:
-                    st.error(f"⚠️ ¡PELIGRO DE TRADEMARK! Hemos detectado marcas registradas: **{', '.join(alertas).title()}**")
-                    st.write("❌ **Acción:** Borra estas palabras inmediatamente de tus tags o título. Etsy cerrará tu tienda.")
-                else:
-                    st.success("✅ ¡Listado Limpio! Tu texto y tags pasaron la prueba de la Lista Negra común.")
-            else:
-                st.warning("No hay texto para revisar aún.")
-
-    with col_legal2:
-        st.subheader("Base Oficial (EUA)")
-        st.markdown("[🔍 Buscar en USPTO (TESS)](https://tmsearch.uspto.gov/)")
-        st.markdown("[📝 Buscar en Trademarkia](https://trademarkia.com/)")
+    if st.button("Escanear Listado"):
+        if texto_a_revisar:
+            alertas = [marca for marca in TRADEMARK_BLACKLIST if marca in texto_a_revisar.lower()]
+            if alertas: st.error(f"⚠️ ¡PELIGRO! Marcas registradas: **{', '.join(alertas).title()}**")
+            else: st.success("✅ ¡Listado Limpio!")
+        else: st.warning("No hay texto para revisar aún.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif menu == "📅 Calendario POD":
-    st.markdown("<h1>📅 Calendario POD y Retención (Estrategia EUA)</h1>", unsafe_allow_html=True)
-    st.markdown("En Print on Demand, **diseñamos con 2 a 3 meses de anticipación**.")
-    
-    tab_cal, tab_cup = st.tabs(["⏰ Calendario de Subidas (Cuándo Diseñar)", "💌 Estrategia de Cupones (Fidelización)"])
-
-    with tab_cal:
-        st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-        st.subheader("El Ciclo de Vida del Regalo en EUA")
-        col_q1, col_q2 = st.columns(2)
-        with col_q1:
-            st.markdown("""
-            **Q1 (Ene - Mar)**
-            * **Enero:** Diseña para *Valentine's Day* y *St. Patrick's Day*.
-            * **Febrero:** Sube diseños de *Easter* y *Spring*.
-            * **Marzo:** ¡URGENTE! Diseña para *Mother's Day*.
-            
-            **Q2 (Abr - Jun)**
-            * **Abril:** Sube diseños de *Father's Day* y *Graduaciones*.
-            * **Mayo:** Diseña para *Teacher Appreciation* y *Nurse Week*.
-            * **Junio:** Sube nichos de verano (Camping, Julio 4th).
-            """)
-        with col_q2:
-            st.markdown("""
-            **Q3 (Jul - Sep)**
-            * **Julio:** Diseña para *Back to School*.
-            * **Agosto:** Sube *Halloween* (El algoritmo necesita tiempo).
-            * **Septiembre:** Sube *Thanksgiving* y prepara *Navidad*.
-            
-            **Q4 (Oct - Dic) - ¡Temporada Alta!**
-            * **Octubre:** Todo debe ser *Christmas* y *Ugly Sweaters*.
-            * **Noviembre:** Black Friday / Cyber Monday.
-            * **Diciembre:** Prepara diseños de *New Year*.
-            """)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with tab_cup:
-        st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-        st.subheader("El Embudo de Retención (Estilo Top Sellers)")
-        st.markdown("Ve a **Marketing > Sales and Discounts** en Etsy y configura estas 3 campañas:")
-        st.info("**1. Carrito Abandonado (Abandoned Cart)** - 15% OFF (Código: VUELVE15)")
-        st.success("**2. Agradecimiento Post-Compra (Thank You)** - 20% OFF (Código: GRACIAS20)")
-        st.warning("**3. Favoritos (Recently Favorited)** - 10% OFF (Código: TUYO10)")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-elif menu == "📈 Auditoría de Tienda":
-    st.markdown("<h1>📈 Auditoría de Tienda (Identifica tus Ganadores)</h1>", unsafe_allow_html=True)
-    st.markdown("Ve a **Etsy > Settings > Options > Download Data > Orders** y sube ese archivo CSV aquí para descubrir qué escalar.")
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
-    
-    uploaded_csv = st.file_uploader("Sube tu archivo CSV de Pedidos (EtsySoldOrders.csv)", type=["csv"])
+elif menu == "📈 7. Auditoría de Tienda":
+    st.markdown("<h1>📈 Auditoría de CSV</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
+    uploaded_csv = st.file_uploader("Sube EtsySoldOrders.csv", type=["csv"])
 
     if uploaded_csv:
         try:
             df = pd.read_csv(uploaded_csv)
             item_col = [col for col in df.columns if 'Item Name' in col or 'Artículo' in col or 'Title' in col]
             qty_col = [col for col in df.columns if 'Quantity' in col or 'Cantidad' in col]
-            
             if item_col and qty_col:
-                item_name = item_col[0]
-                qty_name = qty_col[0]
-                
-                ventas_por_producto = df.groupby(item_name)[qty_name].sum().reset_index()
-                ventas_por_producto = ventas_por_producto.sort_values(by=qty_name, ascending=False)
-                
-                st.subheader("🏆 Tus Top 5 Productos (¡Escala estos!)")
-                st.markdown("*Estrategia: Pon estos diseños en OTROS productos (ej. de Taza a Sudadera).*")
+                ventas_por_producto = df.groupby(item_col[0])[qty_col[0]].sum().reset_index().sort_values(by=qty_col[0], ascending=False)
+                st.subheader("🏆 Top 5 Productos (¡Escala estos!)")
                 st.dataframe(ventas_por_producto.head(5), use_container_width=True)
-                
-                st.subheader("💀 Productos Muertos (Mátalos o re-optimízalos)")
-                st.markdown("*Estrategia: Cambia el Mockup o el SEO. Si no venden en 2 meses más, bórralos.*")
+                st.subheader("💀 Productos Muertos")
                 st.dataframe(ventas_por_producto.tail(5), use_container_width=True)
-            else:
-                st.error("No se encontraron las columnas de 'Item Name' y 'Quantity' en el CSV.")
-        except Exception as e:
-            st.error(f"Hubo un error al leer el archivo. Detalle: {e}")
+            else: st.error("No se encontraron las columnas correctas.")
+        except Exception as e: st.error(f"Error: {e}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-elif menu == "🔮 Radar Dinámico":
-    st.markdown("<h1>🔮 Radar Dinámico de Tendencias (¿Qué diseñar HOY?)</h1>", unsafe_allow_html=True)
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+elif menu == "💡 8. Ideas y Tendencias":
+    st.markdown("<h1>💡 Ideas, Tendencias y Cupones</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='app-screen'>", unsafe_allow_html=True)
     
-    mes_actual = datetime.datetime.now().month
-    mes_objetivo = (mes_actual + 2) % 12
-    if mes_objetivo == 0: mes_objetivo = 12
-
-    meses = {
-        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
-        7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
-    }
-
-    st.markdown(f"Estamos en **{meses[mes_actual]}**. El algoritmo de Etsy tarda semanas en indexar SEO. Por lo tanto, hoy deberías estar subiendo diseños para la demanda masiva de **{meses[mes_objetivo]}** y el mes siguiente.")
-
-    tendencias_futuras = {
-        1: ["St. Patrick's Day (Marzo)", "Easter / Pascua (Marzo/Abril)", "Spring Break (Marzo)"],
-        2: ["Mother's Day (Mayo - ¡URGENTE!)", "Cinco de Mayo", "Graduaciones Tempranas"],
-        3: ["Teacher Appreciation (Mayo)", "Nurse Week (Mayo)", "Father's Day (Junio - Empieza a diseñar)"],
-        4: ["Father's Day (Junio)", "Pride Month (Junio)", "Summer Vacations / Family Trips (Junio/Julio)"],
-        5: ["Julio 4th (Independencia EUA)", "Camping / Lake Life (Julio)", "Bachelorette Parties (Verano)"],
-        6: ["Back to School (Agosto/Septiembre)", "Fall / Otoño temprano (Hojas, Calabazas)", "Halloween (Agosto - Empieza ya)"],
-        7: ["Halloween (Octubre)", "Thanksgiving / Friendsgiving (Noviembre)", "Autumn Festivals"],
-        8: ["Christmas / Ugly Sweaters (Diciembre - Sube todo en Q4)", "Navidad para Mascotas"],
-        9: ["Black Friday Prep", "Regalos Navideños Personalizados", "Winter / Nieve"],
-        10: ["New Year's Eve (Enero)", "Fitness / Gym Goals (Para Enero)", "Valentine's Day (Febrero - Prepárate)"],
-        11: ["Valentine's Day (Febrero)", "Super Bowl / Sports (Febrero)"],
-        12: ["Valentine's Day (Febrero)", "100 Days of School", "Mardi Gras"]
-    }
-
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        st.success(f"**NICHOS EN AUGE PARA SUBIR HOY:**")
-        for tendencia in tendencias_futuras.get(mes_actual, ["Preparar siguiente temporada"]):
-            st.write(f"✅ {tendencia}")
-
-    with col_t2:
-        st.warning("**ESTILO GRÁFICO EN TENDENCIA (EUA):**")
-        st.write("🎨 Retro Wavy Text (Estilo años 70s)")
-        st.write("🎨 Minimalist Line Art (Elegante y barato de imprimir)")
-        st.write("🎨 Faux Embroidery (Efecto bordado impreso)")
-        st.write("🎨 Bootleg Rap 90s (Camisetas vintage personalizadas con fotos)")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-elif menu == "💡 Máquina de Ideas":
-    st.markdown("<h1>💡 Máquina de Ideas (Micro-Nichos Inexplorados)</h1>", unsafe_allow_html=True)
-    st.markdown("Haz clic en el botón para generar combinaciones únicas basadas en las matrices de éxito de tiendas multimillonarias.")
-    st.markdown("<div class='white-card'>", unsafe_allow_html=True)
+    st.subheader("💌 Embudo de Retención (Top Sellers)")
+    st.markdown("Ve a Marketing en Etsy y configura:")
+    st.info("**1. Carrito Abandonado:** 15% OFF (VUELVE15)")
+    st.success("**2. Post-Compra:** 20% OFF (GRACIAS20)")
+    st.warning("**3. Favoritos:** 10% OFF (TUYO10)")
+    st.markdown("---")
     
     col_idea1, col_idea2 = st.columns(2)
-
     with col_idea1:
-        if st.button("🎲 Generar Idea para POD Mascotas"):
-            mascotas = ["Perro de Tres Patas", "Gato Ciego", "Perro de Terapia para Autismo", "Mascota Rescatada de Refugio", "Hurón de Apoyo Emocional", "Perro Policia Retirado", "Golden Retriever Senior", "Gato Negro (Mala Suerte Revertida)"]
-            angulos = ["Memorial Acuarela", "Regalo de Gotcha Day (Adopción)", "Arte de Línea Minimalista", "Diseño Divertido de 'Empleado del Mes'", "Retrato Estilo Renacentista"]
-            productos = ["Taza de Café con Interior Negro", "Manta Súper Suave", "Adorno Navideño Acrílico", "Vaso Térmico para Enfermeras", "Sudadera Premium"]
-            
-            st.success(f"**Idea Generada:**")
-            st.write(f"**Nicho:** {random.choice(mascotas)}")
-            st.write(f"**Ángulo:** {random.choice(angulos)}")
-            st.write(f"**Producto:** {random.choice(productos)}")
-            st.caption("Estrategia: Busca esto en Etsy. Si hay menos de 500 resultados, ¡hazlo hoy!")
+        if st.button("Idea Mascotas POD"):
+            mascotas = ["Perro 3 Patas", "Gato Ciego", "Perro Terapia", "Mascota Rescatada"]
+            angulos = ["Memorial Acuarela", "Gotcha Day", "Arte Minimalista"]
+            productos = ["Taza Interior Negro", "Manta Suave", "Adorno Acrílico"]
+            st.success(f"**Nicho:** {random.choice(mascotas)}\n\n**Ángulo:** {random.choice(angulos)}\n\n**Producto:** {random.choice(productos)}")
 
     with col_idea2:
-        if st.button("🎲 Generar Idea para Invitaciones"):
-            eventos = ["Fiesta de Divorcio", "Cumpleaños 15 de Perro Senior", "Adopción Oficial de Padrastro", "Celebración de Vida (Funeral Alegre)", "Fiesta de Quitarse los Brackets", "Fiesta de Vasectomía", "Aniversario de Supervivencia al Cáncer"]
-            estilos = ["Acuarela Floral Oscura", "Tipografía Retro Años 70s", "Minimalista Blanco y Negro", "Estilo Periódico Vintage", "Boleto de Avión/Concierto Falso"]
-            
-            st.success(f"**Idea Generada:**")
-            st.write(f"**Evento:** {random.choice(eventos)}")
-            st.write(f"**Estilo Visual:** {random.choice(estilos)}")
-            st.caption("Estrategia: El mercado de 'Anti-Fiestas' o celebraciones no convencionales está explotando en TikTok. Capitaliza esto.")
+        if st.button("Idea Invitaciones"):
+            eventos = ["Fiesta Divorcio", "Cumpleaños 15 Perro", "Adopción Padrastro", "Celebración de Vida"]
+            estilos = ["Acuarela Floral", "Retro 70s", "Minimalista Blanco/Negro", "Periódico Vintage"]
+            st.success(f"**Evento:** {random.choice(eventos)}\n\n**Estilo:** {random.choice(estilos)}")
     st.markdown("</div>", unsafe_allow_html=True)
