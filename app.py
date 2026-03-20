@@ -174,6 +174,36 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
     
     uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"])
     
+    # 1. Guardar la imagen en la memoria profunda si se sube un archivo
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
+            fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
+            fondo_blanco.paste(image, mask=image.split()[-1])
+            st.session_state["imagen_memoria"] = fondo_blanco
+        else:
+            st.session_state["imagen_memoria"] = image.convert("RGB")
+
+    # 2. Mostrar la imagen SIEMPRE que esté en memoria
+    if "imagen_memoria" in st.session_state:
+        st.image(st.session_state["imagen_memoria"], caption="Imagen en memoria", width=300)
+
+        # 3. Botón para leer el texto (ya sin el código que la borraba)
+        if st.button("👁️ Leer Texto del Diseño"):
+            with st.spinner("Analizando pixeles..."):
+                texto = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
+                st.session_state["detected_text"] = texto
+
+    # 4. Mostrar y editar el texto detectado
+    if st.session_state.get("detected_text"):
+        st.subheader("Texto detectado (Edítalo para que quede perfecto):")
+        nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"])
+        
+        if nuevo_texto != st.session_state["detected_text"]:
+            st.session_state["detected_text"] = nuevo_texto
+            
+        st.success("✅ ¡Texto guardado! Ya puedes ir al menú '2. Catálogo y Tiendas'.")
+    
     if uploaded_file:
         image = Image.open(uploaded_file)
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
