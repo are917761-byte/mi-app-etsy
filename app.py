@@ -189,7 +189,7 @@ if uploaded_file:
 
     st.image(image, caption="Vista previa", width=300)
 
-    if st.button("Detectar texto (OCR)"):
+    if st.button("Detectar Imagen"):
         with st.spinner("Analizando imagen..."):
             texto = extraer_texto_ocr(reader, image)
             st.session_state["detected_text"] = texto
