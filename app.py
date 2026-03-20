@@ -187,7 +187,7 @@ if uploaded_file:
     # --- NUEVA LÓGICA ESTRATÉGICA ---
     st.markdown("---")
     st.subheader("📝 ¿Cómo definimos el SEO de tu diseño?")
-    st.markdown("Si tu diseño tiene texto (ej: una frase), usa el OCR. Si es **SOLO GRÁFICO** (ej: retrato de perro acuarela), escribe el concepto tú misma.")
+    st.markdown("Si tu diseño tiene texto (ej: una frase), usa el boton. Si es **SOLO GRÁFICO** (ej: retrato de perro acuarela), escribe el concepto tú misma.")
 
     col_ocr1, col_ocr2 = st.columns(2)
 
