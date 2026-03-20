@@ -6,26 +6,35 @@ from PIL import Image, ImageEnhance, ImageOps
 import os
 import re
 import requests
+import json
 from bs4 import BeautifulSoup
 import datetime
 import random
 
-# =========================
-# CONFIGURACIÓN INICIAL
-# =========================
-st.set_page_config(page_title="Etsy AI Listing Generator", layout="wide", page_icon="🛍️")
+# =================================================================
+# 1. CONFIGURACIÓN INICIAL Y ESTADO DE SESIÓN
+# =================================================================
+st.set_page_config(page_title="Etsy AI Listing Generator PRO", layout="wide", page_icon="🛍️")
+
+# Estilo CSS para mejorar la interfaz
+st.markdown("""
+    <style>
+    .main { background-color: #f5f7f9; }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #ff5a1f; color: white; border: none; font-weight: bold;}
+    .stTabs [data-baseweb="tab-list"] { gap: 24px; }
+    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #f0f2f6; border-radius: 5px 5px 0px 0px; gap: 1px; }
+    .stTabs [aria-selected="true"] { background-color: #ff5a1f !important; color: white !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
 st.title("🛍️ Etsy AI Listing Generator (Modo Estratega POD)")
 
-# =========================
-# SESSION STATE INIT
-# =========================
+# Inicialización de variables de estado
 if "product" not in st.session_state: st.session_state["product"] = None
-if "text" not in st.session_state: st.session_state["text"] = ""
 if "niche" not in st.session_state: st.session_state["niche"] = "General"
 if "detected_text" not in st.session_state: st.session_state["detected_text"] = ""
-if "category" not in st.session_state: st.session_state["category"] = None
 if "tags_generados" not in st.session_state: st.session_state["tags_generados"] = []
+if "live_tags" not in st.session_state: st.session_state["live_tags"] = []
 
 @st.cache_resource
 def load_reader():
@@ -33,9 +42,9 @@ def load_reader():
 
 reader = load_reader()
 
-# =========================
-# FUNCIONES PRINCIPALES
-# =========================
+# =================================================================
+# 2. FUNCIONES DE PROCESAMIENTO (OCR Y KEYWORDS)
+# =================================================================
 def extraer_texto_ocr(reader, image):
     image_np = np.array(image)
     try:
@@ -59,655 +68,346 @@ def extraer_keywords_texto(texto, max_keywords=12):
         if len(resultado) >= max_keywords: break
     return resultado
 
-def recomendar_producto_ganador(texto, niche):
-    texto = texto.lower()
-    niche = niche.lower()
-    recomendaciones = []
-    if any(w in texto or w in niche for w in ["navidad", "christmas", "xmas", "catmas", "ornament"]):
-        recomendaciones.extend(["Ceramic Ornament (Adorno Navideño)", "Gildan 18000 (Ugly Sweater Style)"])
-    if any(w in niche for w in ["nurse", "teacher", "doctor", "lawyer"]):
-        recomendaciones.extend(["Tote Bag (Para llevar al trabajo)", "Tumbler 20oz (Vasos para turnos largos)"])
-    if any(w in niche for w in ["dog", "cat", "pet", "paw"]):
-        recomendaciones.extend(["Pet Bandana (Para el perrito)", "White Ceramic Mug 15oz (Para el dueño)"])
-    if any(w in niche for w in ["mom", "grandma", "dad", "family", "fallecida", "memorial"]):
-        recomendaciones.extend(["Velveteen Plush Blanket (Regalo acogedor)", "Acrylic Plaque (Recuerdo sentimental)"])
-    if any(w in niche for w in ["gym", "workout", "camping", "fishing"]):
-        recomendaciones.extend(["Enamel Campfire Mug", "Tumbler 20oz"])
-
-    if not recomendaciones:
-        recomendaciones = ["Bella+Canvas 3001 (Camiseta Bestseller)", "White Ceramic Mug 11oz (Regalo Seguro)"]
-    return list(set(recomendaciones))[:2]
-
-# =========================
-# TRADUCTOR Y LIMPIADOR INTERNO PARA SEO PURO (INGLÉS)
-# =========================
+# =================================================================
+# 3. TRADUCTORES Y LIMPIADORES SEO (ESTRATEGIA USA)
+# =================================================================
 def limpiar_producto_en(producto):
-    p = producto.lower()
-    if "blanket" in p: return "Plush Blanket"
-    if "mug" in p: return "Coffee Mug"
-    if "canvas" in p: return "Canvas Art"
+    p = str(producto).lower()
+    if "blanket" in p or "cobija" in p: return "Plush Blanket"
+    if "mug" in p or "taza" in p: return "Coffee Mug"
+    if "canvas" in p or "lienzo" in p: return "Canvas Art"
     if "bandana" in p: return "Pet Bandana"
-    if "plaque" in p: return "Acrylic Plaque"
+    if "plaque" in p or "placa" in p: return "Acrylic Plaque"
     if "hoodie" in p: return "Custom Hoodie"
-    if "t-shirt" in p or "3001" in p: return "Custom Shirt"
-    if "invitation" in p: return "Digital Invite"
-    if "evite" in p: return "Mobile Evite"
-    if "sign" in p: return "Printable Sign"
-    if "portrait" in p: return "Custom Portrait"
-    if "bowl" in p: return "Pet Bowl"
+    if "3001" in p or "t-shirt" in p: return "Custom Shirt"
+    if "sweatshirt" in p or "18000" in p: return "Custom Sweatshirt"
+    if "bowl" in p or "plato" in p: return "Pet Bowl"
+    if "tag" in p: return "Pet ID Tag"
     if "collar" in p: return "Pet Collar"
     if "bed" in p: return "Pet Bed"
     return "Custom Gift"
 
 def limpiar_nicho_en(nicho):
-    n = nicho.lower()
+    n = str(nicho).lower()
     if "fallecid" in n or "memorial" in n: return "Pet Memorial"
     if "servicio" in n or "apoyo" in n: return "Service Dog"
     if "rescate" in n or "adopci" in n: return "Pet Rescue"
     if "divorcio" in n: return "Divorce Party"
     if "cumplea" in n: return "Pet Birthday"
     if "despedida" in n: return "Bachelorette"
-    if "conmemorativo" in n: return "Memorial Gift"
+    if "maestra" in n or "teacher" in n: return "Teacher"
+    if "enfermera" in n or "nurse" in n: return "Nurse"
     return "Pet Lover"
 
-# =========================
-# FUNCIONES PRINCIPALES DE SEO (REGLAS ETSY 2024+)
-# =========================
+# =================================================================
+# 4. INYECCIÓN DE DETALLES TÉCNICOS PRINTIFY (SOLUCIÓN DEFINITIVA)
+# =================================================================
+def obtener_detalles_printify(producto):
+    p = str(producto).lower().strip()
+    
+    if "3001" in p or "t-shirt" in p or "shirt" in p:
+        return "👕 ITEM SPECS (Bella+Canvas 3001):\n- 100% Airlume combed and ringspun cotton (ultra-soft!)\n- Light fabric (4.2 oz/yd²)\n- Retail fit & Tear away label\n- Runs true to size"
+    elif "18000" in p or "18500" in p or "hoodie" in p or "sweatshirt" in p:
+        return "🧥 ITEM SPECS (Premium Blend):\n- 50% cotton, 50% polyester\n- Medium-heavy fabric for cozy warmth\n- Classic fit & Tear-away label"
+    elif "1717" in p or "comfort colors" in p:
+        return "👕 ITEM SPECS (Comfort Colors 1717):\n- 100% ring-spun cotton\n- Heavy fabric (6.1 oz/yd²)\n- Relaxed fit, garment-dyed fabric"
+    elif "mug" in p or "taza" in p:
+        return "☕ ITEM SPECS (Ceramic Mug):\n- High-quality white ceramic\n- Lead and BPA-free\n- Microwave and dishwasher safe\n- Vibrant, fade-resistant wrap-around print"
+    elif "bandana" in p:
+        return "🐾 ITEM SPECS (Pet Bandana):\n- 100% soft spun polyester\n- Breathable, durable, and lightweight\n- One-sided vibrant print"
+    elif "plaque" in p or "placa" in p:
+        return "✨ ITEM SPECS (Acrylic Plaque):\n- Premium, crystal-clear acrylic (3mm thickness)\n- Vibrant, fade-resistant UV printing"
+    elif "bowl" in p or "plato" in p:
+        return "🥣 ITEM SPECS (Pet Bowl):\n- Double-wall stainless steel or ceramic options\n- Anti-slip rubber base\n- Dishwasher safe (top rack)"
+    elif "blanket" in p or "cobija" in p or "manta" in p:
+        return "🛌 ITEM SPECS (Velveteen Plush):\n- 100% Polyester for extreme, cozy softness\n- Machine washable (cold)"
+    elif "tag" in p:
+        return "🏷️ ITEM SPECS (Pet Tag):\n- Solid metal with white coating\n- Includes metal ring for easy collar attachment"
+    elif "bed" in p:
+        return "🛏️ ITEM SPECS (Pet Bed):\n- 100% polyester print area\n- Polyester filling for maximum comfort"
+    else:
+        return f"✨ ITEM SPECS PARA {str(producto).upper()}:\n- Premium quality materials\n- Vibrant and durable printing\n- Carefully crafted to order"
+
+# =================================================================
+# 5. MOTOR DE GENERACIÓN SEO (TÍTULOS, TAGS Y API EN TIEMPO REAL)
+# =================================================================
+def obtener_keywords_tiempo_real_etsy(keyword_semilla):
+    kw_formateada = keyword_semilla.replace(" ", "+")
+    url = f"https://www.etsy.com/ws/search/suggest?search_query={kw_formateada}&limit=11"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json'
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            datos = response.json()
+            sugerencias = [item.get('query', '') for item in datos.get('results', []) if 'query' in item]
+            return [s for s in sugerencias if s]
+        else:
+            return []
+    except Exception as e:
+        return []
 
 def generar_titulos_venta(keywords, product, niche, texto_detectado, lang="en"):
-    prod_seo = limpiar_producto_en(product) if lang == "en" else product.split(" (")[0]
-    nicho_seo = limpiar_nicho_en(niche) if lang == "en" else niche.split(" (")[0]
+    prod_seo = limpiar_producto_en(product)
+    nicho_seo = limpiar_nicho_en(niche)
     kw_oro = texto_detectado.title() if texto_detectado else "Custom Art"
-    kw_extra = keywords[1].title() if len(keywords) > 1 else "Design"
+    kw_extra = keywords[1].title() if len(keywords) > 1 else "Unique"
 
     if lang == "en":
-        titulos = [
+        return [
             (f"Custom {kw_oro} {prod_seo} for {nicho_seo}, Personalized {nicho_seo} Gift, {kw_extra} Decor", 100),
             (f"Personalized {nicho_seo} {prod_seo}, {kw_oro} Gift Idea, Unique {prod_seo} for {nicho_seo}", 95),
             (f"{kw_oro} Style {prod_seo} Custom Name, {nicho_seo} Keepsake Present, {kw_extra} Artwork", 90)
         ]
     else:
-        titulos = [
-            (f"{prod_seo} Personalizado para {nicho_seo}, Regalo de {kw_oro} Único", 100),
-            (f"Retrato de {nicho_seo} en {prod_seo}, Detalle Personalizado {kw_oro}", 92),
-            (f"{prod_seo} de {nicho_seo} {kw_oro} Personalizable", 85)
+        return [
+            (f"{prod_seo} Personalizado {kw_oro} para {nicho_seo}, Regalo Único", 100),
+            (f"Detalle Especial de {nicho_seo}, {prod_seo} con Diseño {kw_oro}", 92)
         ]
-    return [(t[:140].strip(', '), score) for t, score in titulos]
 
 def generar_tags_etsy(keywords, product, niche, lang="en"):
     tags = []
+    prod_seo = limpiar_producto_en(product).replace("Custom ", "").strip()
+    nicho_base = limpiar_nicho_en(niche).replace("Pet ", "").strip()
+    kw_oro = keywords[0][:15] if keywords else "Personalized"
     
     if lang == "en":
-        prod_en = limpiar_producto_en(product).replace("Custom ", "").replace("Custom", "").strip()
-        nicho_en = limpiar_nicho_en(niche).replace("Pet ", "").strip()
-        kw = keywords[0][:15] if keywords else "Personalized"
-        
         raw_tags = [
-            f"custom {prod_en}", 
-            f"{nicho_en} gift", 
-            f"personalized {kw}",
-            "birthday present",
-            "memorial keepsake",
-            f"{nicho_en} lover",
-            "made to order gift",
-            f"unique {prod_en}", 
-            "hand designed art",
-            f"customized {nicho_en}",
-            "christmas gift idea",
-            "pet loss sympathy",
-            f"{kw} artwork"
+            f"custom {prod_seo}", f"{nicho_base} gift", f"personalized {kw_oro}",
+            "birthday present", "memorial keepsake", f"{nicho_base} lover",
+            "made to order gift", f"unique {prod_seo}", "hand designed art",
+            f"customized {nicho_base}", "pet loss sympathy", f"{kw_oro} artwork"
         ]
     else:
-        prod_es = product.split(" (")[0].strip().lower()
-        nicho_es = niche.split(" (")[0].strip().lower()
-        kw = keywords[0] if keywords else "arte"
-        
-        raw_tags = [
-            f"{prod_es} custom", f"regalo {nicho_es}", f"{kw} personal",
-            f"regalo unico", "hecho a medida", f"para {nicho_es}",
-            "recuerdo especial", "arte personalizado", f"detalle {nicho_es}",
-            "regalo original", "tendencia", "regalo especial", f"{kw} a medida"
-        ]
-        
+        raw_tags = [f"{prod_seo} custom", f"regalo {nicho_base}", f"{kw_oro} personal", "regalo unico", "hecho a medida"]
+
     for t in raw_tags:
-        clean_t = t.replace("  ", " ").strip()
-        if len(clean_t) <= 20 and clean_t not in tags: 
-            tags.append(clean_t)
+        clean_t = " ".join(t.split()).lower()
+        if len(clean_t) <= 20 and clean_t not in tags: tags.append(clean_t)
         if len(tags) == 13: break
-        
-    fillers = ["bespoke gift", "personalized item", "unique present", "custom design"]
+    
+    fillers = ["gift for her", "personalized gift", "custom order", "unique present"]
     for f in fillers:
         if len(tags) < 13 and f not in tags: tags.append(f)
-            
     return tags[:13]
 
-def obtener_detalles_printify(producto):
-    p = producto.lower()
-    
-    # --- ROPA ---
-    if "3001" in p or "t-shirt" in p or "camiseta" in p:
-        return "👕 ITEM SPECS (Bella+Canvas 3001):\n- 100% Airlume combed and ringspun cotton (ultra-soft!)\n- Light fabric (4.2 oz/yd²)\n- Retail fit & Tear away label\n- Runs true to size"
-    
-    elif "18000" in p or "18500" in p or "hoodie" in p or "sweatshirt" in p or "sudadera" in p:
-        return "🧥 ITEM SPECS (Premium Blend):\n- 50% cotton, 50% polyester\n- Medium-heavy fabric for cozy warmth\n- Classic fit & Tear-away label\n- Runs true to size"
-    
-    elif "1717" in p or "comfort colors" in p:
-        return "👕 ITEM SPECS (Comfort Colors 1717):\n- 100% ring-spun cotton\n- Heavy fabric (6.1 oz/yd²)\n- Relaxed fit, garment-dyed fabric\n- Double-needle armhole, sleeve and bottom hems"
-
-    # --- HOGAR Y TAZAS ---
-    elif "mug" in p or "taza" in p:
-        return "☕ ITEM SPECS (Ceramic Mug):\n- High-quality white ceramic\n- Lead and BPA-free\n- Microwave and dishwasher safe\n- Vibrant, fade-resistant wrap-around print"
-    
-    elif "blanket" in p or "cobija" in p or "manta" in p:
-        return "🛌 ITEM SPECS (Velveteen Plush):\n- 100% Polyester for extreme, cozy softness\n- Double needle topstitch on all seams\n- Vibrant, high-detail one-sided print\n- Machine washable (cold)"
-    
-    elif "plaque" in p or "placa" in p or "acrylic" in p:
-        return "✨ ITEM SPECS (Acrylic Plaque):\n- Premium, crystal-clear acrylic (3mm thickness)\n- Vibrant, fade-resistant printed design\n- Sleek wooden base (if selected)\n- Perfect for memorial or desk display"
-
-    # --- EXCLUSIVOS MASCOTAS ---
-    elif "bandana" in p:
-        return "🐾 ITEM SPECS (Pet Bandana):\n- 100% soft spun polyester\n- Breathable, durable, and lightweight\n- Hemmed edges for extra durability\n- One-sided vibrant print"
-    
-    elif "bowl" in p or "plato" in p:
-        return "🥣 ITEM SPECS (Pet Bowl):\n- Double-wall stainless steel or heavy ceramic\n- Anti-slip rubber base (Steel version)\n- Dishwasher safe (top rack)\n- Large capacity for food or water"
-    
-    elif "bed" in p or "cama" in p:
-        return "🛏️ ITEM SPECS (Pet Bed):\n- 100% polyester print area with dark brown fleece back\n- Polyester filling for maximum comfort\n- Concealed zipper for easy cleaning\n- Durable and water-resistant bottom"
-    
-    elif "tag" in p or "placa" in p:
-        return "🏷️ ITEM SPECS (Pet Tag):\n- High-quality solid metal (White Coated)\n- Double-sided custom printing\n- Includes metal ring for easy collar attachment"
-
-    # --- DIGITALES ---
-    elif "digital" in p or "invitation" in p or "evite" in p:
-        return "📱 ITEM SPECS (Digital File):\n- High-resolution digital download (JPEG/PDF)\n- NO physical item will be shipped\n- Ready to print at home or send via text/email"
-    
-    return "✨ ITEM SPECS:\n- Premium quality materials\n- Vibrant and durable printing\n- Carefully crafted to order just for you"
-
 def generar_descripcion_vendedora(product, niche, texto_detectado, lang="en"):
-    # Obtenemos los specs reales de Printify
     specs_reales = obtener_detalles_printify(product)
-    
     prod_en = limpiar_producto_en(product)
     nicho_en = limpiar_nicho_en(niche)
     kw = texto_detectado if texto_detectado else "Custom Art"
     
     if lang == "en":
-        return f"""✨ {prod_en.upper()} PERSONALIZED FOR {nicho_en.upper()} ✨
-    
-Capture a special moment with our custom "{kw}" {prod_en}. This isn't just a product; it's a personalized keepsake designed specifically for {nicho_en} lovers!
-
-{specs_reales}
-
-🎨 HOW TO ORDER:
-1. Choose your options and add your personalization details.
-2. For photo-based designs, please send your high-resolution image via Etsy Message after checkout.
-3. Our artists will handle the rest!
-
-📦 PRODUCTION & SHIPPING:
-- Production time: 2-5 business days.
-- Shipping: Tracked delivery straight to your door.
-
-Note: Colors may vary slightly due to monitor settings. Since this is a custom item, we only accept returns for damaged products. Thanks for supporting small business!"""
-
+        desc = "✨ " + prod_en.upper() + " PERSONALIZED FOR " + nicho_en.upper() + " ✨\n\n"
+        desc += 'Capture a special moment with our custom "' + kw + '" ' + prod_en + '. This is a personalized keepsake designed specifically for ' + nicho_en + ' lovers!\n\n'
+        desc += "👇 PRODUCT DETAILS 👇\n"
+        desc += specs_reales + "\n\n"
+        desc += "🎨 HOW TO ORDER:\n1. Choose your options.\n2. Add details in the personalization box.\n3. Send your photo via Etsy Message!\n\n"
+        desc += "📦 PRODUCTION & SHIPPING:\n- 2-5 business days production.\n- Tracked delivery."
+        return desc
     else:
-        prod_es = product.split(" (")[0].strip()
-        nicho_es = niche.split(" (")[0].strip()
-        
-        return f"""🔥 ¡Da el regalo perfecto con este {prod_es} Personalizado diseñado exclusivamente para {nicho_es}! 
-Ya sea para un regalo único o para ti mismo, este diseño de "{kw}" garantiza una sonrisa. 
+        desc = "🔥 ¡Da el regalo perfecto con este " + str(product).upper() + " Personalizado!\n\n"
+        desc += "👇 DETALLES DEL PRODUCTO 👇\n"
+        desc += specs_reales + "\n\n"
+        desc += "📦 ENVÍO: 2-5 días hábiles con rastreo."
+        return desc
 
-✨ CÓMO PERSONALIZAR ✨
-1. Ingresa los detalles en la caja de personalización.
-2. ¡Revisa la ortografía! Imprimimos exactamente lo que escribes.
+# =================================================================
+# 6. INTERFAZ DE USUARIO (TABS ESTRATÉGICAS)
+# =================================================================
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🎨 Diseño y Nicho", "🚀 SEO & Listado", "💰 Rentabilidad", "🚨 Legal & Radar", "📈 Auditoría & Ideas"
+])
 
-{specs_reales}
-
-🎨 MUESTRA DIGITAL (OPCIONAL - COSTO EXTRA)
-Para mantener nuestros tiempos de envío rápidos, las muestras NO están incluidas automáticamente. 
-Si deseas ver el arte antes de imprimir, por favor compra nuestro listado "Digital Proof Add-On" junto con este artículo. 
-
-📦 DETALLES Y ENVÍO
-- Procesado en 2-5 días hábiles. ¡Rastreo incluido!"""
-
-# =========================
-# UI DE LA APLICACIÓN
-# =========================
-
-tab1, tab2, tab3 = st.tabs(["🎨 Diseño y Nicho", "🚀 SEO & Listado", "📊 Calculadora y Legal"])
-
-# -----------------------------
-# 1. SUBIR DISEÑO
-# -----------------------------
+# --- TAB 1: PREPARACIÓN ---
 with tab1:
     st.header("1️⃣ Subir diseño (OCR o Manual)")
     uploaded_file = st.file_uploader("Sube tu diseño transparente (PNG)", type=["png", "jpg", "jpeg"])
 
     if uploaded_file:
         image = Image.open(uploaded_file)
-        
-        # --- MAGIA PARA FONDOS TRANSPARENTES (EL ARREGLO) ---
-        if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
-            # Usamos un fondo GRIS OSCURO (40, 40, 40) en lugar de blanco.
-            # Esto asegura que los diseños con letras blancas o negras sean visibles para el OCR.
+        if image.mode in ('RGBA', 'LA'):
             fondo_seguro = Image.new("RGB", image.size, (40, 40, 40))
             fondo_seguro.paste(image, mask=image.split()[-1])
             image_to_show = fondo_seguro
         else:
             image_to_show = image.convert("RGB")
+        st.image(image_to_show, caption="Vista previa para análisis", width=300)
 
-        st.image(image_to_show, caption="Vista previa (Fondo ajustado para lectura)", width=300)
-
-        # --- NUEVA LÓGICA ESTRATÉGICA ---
-        st.subheader("📝 ¿Cómo definimos el SEO de tu diseño?")
-        st.markdown("Si tu diseño tiene texto (ej: una frase), usa el OCR. Si es **SOLO GRÁFICO** (ej: retrato de perro acuarela), escribe el concepto tú misma.")
-
+        st.subheader("📝 Definición del Concepto SEO")
+        st.markdown("¿Qué dice el diseño? (Ej: 'Dog Mom', 'Retrato Acuarela'). Esto define tus keywords principales.")
+        
         col_ocr1, col_ocr2 = st.columns(2)
-
         with col_ocr1:
-            # Tu botón OCR original
             if st.button("👁️ Detectar texto (OCR)"):
-                with st.spinner("Analizando imagen..."):
-                    texto = extraer_texto_ocr(reader, image_to_show)
-                    st.session_state["detected_text"] = texto
-                    if not texto.strip():
-                        st.info("OCR no detectó texto. Introduce el concepto manualmente a la derecha.")
-                    else:
-                        st.rerun()
-
+                with st.spinner("Leyendo diseño..."):
+                    st.session_state["detected_text"] = extraer_texto_ocr(reader, image_to_show)
+                st.rerun()
         with col_ocr2:
-            # Entrada manual para diseños puramente gráficos
-            st.markdown("**Entrada Manual (Para diseños gráficos):**")
-            concepto_manual = st.text_input(
-                "Describe lo que se ve en la imagen (ej: Retrato acuarela Golden Retriever):",
-                value=st.session_state["detected_text"], # Se pre-llena con OCR si hubo, o vacío si no
-                key="final_concept_input"
-            )
-            
-            # Actualizamos la variable central del SEO con lo que tú escribas
-            if concepto_manual != st.session_state["detected_text"]:
-                 st.session_state["detected_text"] = concepto_manual
+            st.session_state["detected_text"] = st.text_input("Concepto Visual / Texto Manual:", value=st.session_state["detected_text"])
 
-    # --- Esta condición es la que desbloquea el SEO ---
-    if st.session_state["detected_text"]:
-        st.success(f"✅ Concepto '{st.session_state['detected_text']}' guardado en memoria. ¡Procede al SEO!")
-    elif uploaded_file:
-        st.warning("⚠️ Ejecuta el OCR o escribe el concepto manual arriba para activar el SEO.")
-
-    # -----------------------------
-    # 2. PERFIL DE TIENDA
-    # -----------------------------
     st.header("2️⃣ Perfil de Tienda y Micro-Nicho")
-    col_tienda1, col_tienda2 = st.columns(2)
-
-    with col_tienda1:
-        tienda_seleccionada = st.radio("Selecciona la Tienda a trabajar:", ["🐾 Tienda POD Mascotas", "💌 Tienda Digital (Invitaciones)"])
-
-    with col_tienda2:
-        if tienda_seleccionada == "🐾 Tienda POD Mascotas":
-            subnicho = st.selectbox("Selecciona el Sub-Nicho:", [
-                "Mascotas Fallecidas (Memorial / Rainbow Bridge)",
-                "Mascotas de Servicio Médico / Apoyo Emocional",
-                "Mascotas Vivas (Cumpleaños / Uso Diario)",
-                "Rescate / Adopción (Gotcha Day)"
-            ])
-            estilo_arte = st.selectbox("Estilo de Personalización:", [
-                "Acuarela Digital (Watercolor Portrait)",
-                "Line Art Minimalista",
-                "Caricatura / Cartoon",
-                "Pintura al Óleo Digital"
-            ])
-        else:
-            subnicho = st.selectbox("Selecciona el Sub-Nicho:", [
-                "Fiesta de Divorcio / Inicio de Soltería",
-                "Cumpleaños de Mascotas (Paw-ty)",
-                "Conmemorativos / Celebración de Vida",
-                "Despedida de Soltera Anti-Tradicional"
-            ])
-            estilo_arte = st.selectbox("Estilo Visual:", [
-                "Acuarela Digital Elegante",
-                "Sarcástico / Divertido (Texto Bold)",
-                "Minimalista / Estético",
-                "Boho / Floral"
-            ])
-        st.session_state["niche"] = f"{subnicho} estilo {estilo_arte}"
-
-    st.info(f"🎯 **Enfoque actual:** {tienda_seleccionada} ➔ {st.session_state['niche']}")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 3. SELECCIÓN DE PRODUCTO
-    # -----------------------------
-    st.header("3️⃣ Selección de Producto")
-
-    if tienda_seleccionada == "🐾 Tienda POD Mascotas":
-        st.write("**Catálogo Estratégico Printify (Bestsellers + Mascotas):**")
-        
-        productos_mascotas = [
-            # --- BESTSELLERS GLOBALES (Para los dueños) ---
-            "Bella+Canvas 3001 (T-Shirt Bestseller)",
-            "Gildan 18000 (Crewneck Sweatshirt)",
-            "Gildan 18500 (Hoodie Clásica)",
-            "Comfort Colors 1717 (Camiseta Premium)",
-            "Gildan 5000 (Camiseta Económica)",
-            "White Ceramic Mug 11oz & 15oz (Taza clásica)",
-            "Enamel Campfire Mug (Taza de campamento)",
-            "Tote Bag (Bolsa de tela)",
-            "Die-Cut Stickers (Pegatinas)",
-            "Velveteen Plush Blanket (Cobija Suave)",
-            "Canvas Gallery Wraps (Lienzo Premium)",
-            "Acrylic Plaque (Placa Acrílica Memorial)",
-            
-            # --- PRODUCTOS EXCLUSIVOS PARA MASCOTAS ---
-            "Pet Bandana (Bandana para Cuello)",
-            "Pet Bowl (Plato de Cerámica/Acero)",
-            "Pet Feeding Mat (Tapete para Platos)",
-            "Pet Bed (Cama Suave para Mascotas)",
-            "Pet Tank Top (Camiseta para Perros)",
-            "Pet Tag (Placa de Identificación Hueso/Círculo)",
-            "Pet Collar (Collar Ajustable)"
-        ]
-        
-        # Lo dividimos en 3 columnas para que se vea ordenado
-        cols_prod = st.columns(3)
-        for idx, producto in enumerate(productos_mascotas):
-            with cols_prod[idx % 3]:
-                if st.button(producto):
-                    st.session_state["product"] = producto
-                    
-    else:
-        st.write("**Catálogo Digital:**")
-        productos_digitales = [
-            "Digital Invitation (Canva Template)",
-            "Evite / Mobile Invitation (Smartphone Size)",
-            "Printable Memorial Sign",
-            "Digital Watercolor Portrait File"
-        ]
-        cols_dig = st.columns(2)
-        for idx, producto in enumerate(productos_digitales):
-            with cols_dig[idx % 2]:
-                if st.button(producto):
-                    st.session_state["product"] = producto
-
-    if st.session_state.get("product"):
-        st.success(f"📦 Producto seleccionado: {st.session_state['product']}")
-
-# -----------------------------
-# TAB 2: SEO Y LISTADO
-# -----------------------------
-with tab2:
-    st.header("4️⃣ Generador SEO Experto para Etsy")
-    if st.session_state["detected_text"] and st.session_state.get("product"):
-        if st.button("🚀 Generar Listado Optimizado"):
-            with st.spinner("Creando SEO con intención de regalo..."):
-                product = st.session_state["product"]
-                niche = st.session_state.get("niche", "General")
-                keyword_text = st.session_state["detected_text"].strip()
-                base_keywords = extraer_keywords_texto(keyword_text)
-                if not base_keywords: base_keywords = [niche, product, "gift"]
-
-                st.session_state["tags_generados"] = generar_tags_etsy(base_keywords, product, niche, "en")
-
-                tab_en, tab_es = st.tabs(["🇺🇸 Inglés (Copia esto en Etsy EUA)", "🇪🇸 Español (Para tu Referencia)"])
-
-                with tab_en:
-                    st.info("⚠️ COPIA ESTOS DATOS EN ETSY. El mercado de EUA busca exclusivamente en inglés.")
-                    st.subheader("📌 Títulos Optimizados")
-                    titulos_en = generar_titulos_venta(base_keywords, product, niche, keyword_text, "en")
-                    for t, score in titulos_en:
-                        if score >= 95: st.success(f"⭐ **{score}% MATCH (Mejor Opción):**\n\n{t}")
-                        else: st.info(f"🔥 **{score}% MATCH:**\n\n{t}")
-
-                    st.subheader("🏷️ 13 Etiquetas (Tags en Inglés)")
-                    tags_en = st.session_state["tags_generados"]
-                    for tag in tags_en: st.markdown(f"✅ `{tag}`")
-                    st.code(", ".join(tags_en), language="text")
-                    
-                    st.subheader("📝 Descripción de Alta Conversión")
-                    st.code(generar_descripcion_vendedora(product, niche, keyword_text, "en"), language="text")
-
-                with tab_es:
-                    st.info("💡 Usa esto solo para entender la estrategia.")
-                    st.subheader("📌 Títulos Optimizados")
-                    titulos_es = generar_titulos_venta(base_keywords, product, niche, keyword_text, "es")
-                    for t, score in titulos_es: st.write(f"**{score}% MATCH:** {t}")
-                    st.subheader("🏷️ 13 Etiquetas (Tags en Español)")
-                    tags_es = generar_tags_etsy(base_keywords, product, niche, "es")
-                    st.code(", ".join(tags_es), language="text")
-                    st.subheader("📝 Descripción")
-                    st.text_area("Descripción (ES):", generar_descripcion_vendedora(product, niche, keyword_text, "es"), height=300)
-    else:
-        st.warning("⚠️ Necesitas detectar el texto de una imagen y seleccionar un producto primero.")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 4.5. FLUJO DE MUESTRAS Y ADD-ON
-    # -----------------------------
-    st.header("💬 4.5 Flujo de Muestras y Add-On (Monetización)")
-    tab_proof1, tab_proof2, tab_addon = st.tabs(["💬 Envío de Muestra", "⏰ Recordatorio 24h", "💰 Generador Add-On"])
-
-    with tab_proof1:
-        st.code("""Hi [Nombre del Cliente],\nThank you so much for your order! 💛 \nI have attached the proof (preview) to this message so you can see exactly how it will look.\nPlease review the spelling and the design. If everything looks perfect, just reply with "APPROVED"!\nBest regards,\n[Tu Nombre]""", language="text")
-
-    with tab_proof2:
-        st.code("""Hi [Nombre del Cliente],\nJust checking in! I sent your design proof yesterday. \nTo ensure your order arrives on time, please let me know if the design is approved by [Hora/Fecha]. If I don't hear back by then, I will proceed with printing as shown in the proof to avoid any shipping delays.\nThank you!""", language="text")
-
-    with tab_addon:
-        st.info("💡 Crea un ÚNICO listado en tu tienda. Ponle un precio de $2.99 a $4.99 USD como 'Producto Digital'.")
-        st.subheader("📌 Título del Listado")
-        st.code("Digital Proof Add-On for Custom Orders, Artwork Preview, See Design Before Printing, Optional Digital Proof", language="text")
-        st.subheader("🏷️ Tags")
-        st.code("digital proof, artwork preview, add on listing, see before printing, custom order proof, design preview, optional add on", language="text")
-        st.subheader("📝 Descripción")
-        st.code("""⚠️ PLEASE READ: THIS IS AN ADD-ON SERVICE, NOT A PHYSICAL PRODUCT.\nPurchase this listing IN ADDITION to your custom physical product if you wish to see a digital preview (proof) of the artwork before it is sent to production...""", language="text")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 5. RECURSOS EXTRA (MOCKUPS)
-    # -----------------------------
-    st.subheader("🖼️ Mockups Populares (Placeit)")
-
-    with st.expander("🎨 ESTRATEGIA DE MOCKUPS GANADORES (Modo Pro)", expanded=True):
-        st.markdown("""
-        ### 🚀 Haz que el cliente se detenga (Stop the Scroll)
-        1. **La Foto 1 es tu vitrina:** Añade un texto temporal que diga *'Your Pet's Name Here'* o *'Custom Art'*.
-        2. **Psicología del Contraste:** Producto blanco -> Fondo oscuro o madera. Producto oscuro -> Fondo iluminado.
-        3. **Humaniza:** Los mockups con manos o personas convierten un **40% más** que los productos flotantes.
-        """)
-        st.info("💡 **Tip de Estratega:** En la Foto 1, añade una pequeña marca de agua con el logo de tu tienda para evitar que otros vendedores te roben el diseño.")
-        
-        col_m1, col_m2 = st.columns(2)
-        
-        with col_m1:
-            st.markdown("**Ropa y Básicos**")
-            st.markdown("[👕 T-shirt / Camisetas (B+C 3001, Gildan)](https://placeit.net/c/mockups/stages/t-shirt-mockup)")
-            st.markdown("[🧥 Hoodies / Sudaderas](https://placeit.net/c/mockups/stages/hoodie-mockup)")
-            st.markdown("[👜 Tote Bags / Bolsas](https://placeit.net/c/mockups/stages/tote-bag-mockup)")
-            st.markdown("[✨ Stickers / Pegatinas](https://placeit.net/c/mockups/stages/sticker-mockup)")
-            
-            st.markdown("<br>**Hogar y Regalos (Memoriales)**", unsafe_allow_html=True)
-            st.markdown("[☕ Mugs / Tazas (11oz & 15oz)](https://placeit.net/c/mockups/stages/mug-mockup)")
-            st.markdown("[🥤 Tumblers / Vasos Térmicos](https://placeit.net/c/mockups/stages/tumbler-mockup)")
-            st.markdown("[🖼️ Canvas / Lienzos](https://placeit.net/c/mockups/stages/canvas-mockup)")
-            st.markdown("[🛌 Blankets / Cobijas](https://placeit.net/c/mockups/stages/blanket-mockup)")
-            st.markdown("[🎄 Ornaments / Adornos](https://placeit.net/c/mockups/stages/ornament-mockup)")
-
-        with col_m2:
-            st.markdown("**Exclusivos para Mascotas**")
-            st.markdown("[🐾 Pet Bandanas / Paliacates](https://placeit.net/c/mockups/stages/pet-bandana-mockup)")
-            st.markdown("[🥣 Pet Bowls / Platos](https://placeit.net/c/mockups/stages/pet-bowl-mockup)")
-            st.markdown("[🛏️ Pet Beds / Camas](https://placeit.net/c/mockups/stages/pet-bed-mockup)")
-            st.markdown("[🐕 Pet Tank Tops / Ropita](https://placeit.net/c/mockups/stages/dog-t-shirt-mockup)")
-            st.markdown("[🏷️ Pet Collars / Collares](https://placeit.net/c/mockups/stages/pet-collar-mockup)")
-            
-            st.markdown("<br>**Digitales e Invitaciones**", unsafe_allow_html=True)
-            st.markdown("[💌 Invitations / Tarjetas Impresas](https://placeit.net/c/mockups/stages/invitation-mockup)")
-            st.markdown("[📱 Mobile Evites / Smartphones](https://placeit.net/c/mockups/stages/iphone-mockup)")
-
-# -----------------------------
-# TAB 3: CALCULADORA Y LEGAL
-# -----------------------------
-with tab3:
-    # -----------------------------
-    # 6. CALCULADORA DE RENTABILIDAD POD
-    # -----------------------------
-    st.header("💰 6. Calculadora de Rentabilidad (Estrategia de Envío)")
-    col_calc1, col_calc2 = st.columns(2)
-
-    with col_calc1:
-        st.subheader("📦 Costos (Printify)")
-        costo_printify = st.number_input("Costo de Producción $", min_value=0.0, value=12.50, step=0.5)
-        envio_printify = st.number_input("Costo de Envío Printify $", min_value=0.0, value=4.79, step=0.5)
-
-    with col_calc2:
-        st.subheader("🛍️ Ingresos (Etsy)")
-        precio_venta = st.number_input("Precio del Producto $", min_value=0.0, value=24.99, step=0.5)
-        estrategia_envio = st.radio("Estrategia de Envío al Cliente:", ["Cobrar Envío Aparte", "Envío Gratis (Absorbido)"])
-        cobro_envio_etsy = st.number_input("¿Cuánto cobrarás de envío? $", min_value=0.0, value=5.99, step=0.5) if estrategia_envio == "Cobrar Envío Aparte" else 0.0
-
-    if st.button("📊 Calcular Ganancia Real"):
-        ingreso_total = precio_venta + cobro_envio_etsy
-        etsy_fees = 0.45 + (ingreso_total * 0.095)
-        costo_total = costo_printify + envio_printify + etsy_fees
-        ganancia_neta = ingreso_total - costo_total
-        margen_porcentaje = (ganancia_neta / ingreso_total) * 100 if ingreso_total > 0 else 0
-
-        st.markdown("---")
-        col_res1, col_res2, col_res3 = st.columns(3)
-        col_res1.metric("Ingreso Bruto (Cliente)", f"${ingreso_total:.2f}")
-        col_res2.metric("Tarifas Etsy", f"${etsy_fees:.2f}")
-        col_res3.metric("Costo Printify", f"${(costo_printify + envio_printify):.2f}")
-        
-        col_res4, col_res5 = st.columns(2)
-        if margen_porcentaje >= 30:
-            col_res4.metric("Ganancia Neta", f"${ganancia_neta:.2f}", "Excelente")
-            col_res5.metric("Margen", f"{margen_porcentaje:.1f}%", "OK para Ads")
-            st.success("🔥 ¡Estrategia sólida! Tienes espacio para pagar Etsy Ads.")
-        elif 15 <= margen_porcentaje < 30:
-            col_res4.metric("Ganancia Neta", f"${ganancia_neta:.2f}")
-            col_res5.metric("Margen", f"{margen_porcentaje:.1f}%", delta_color="off")
-            st.warning("⚠️ Margen ajustado. NO uses Ads con este producto.")
-        else:
-            col_res4.metric("Ganancia Neta", f"${ganancia_neta:.2f}", "-Riesgo")
-            col_res5.metric("Margen", f"{margen_porcentaje:.1f}%", "-Sube el precio")
-            st.error("🚨 ¡Alerta roja! Estás ganando muy poco.")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 7. RADAR LEGAL
-    # -----------------------------
-    st.header("🚨 7. Radar Legal y Protección de Tienda")
-    texto_automatico = st.session_state.get("detected_text", "")
-    if "tags_generados" in st.session_state: texto_automatico += " " + " ".join(st.session_state["tags_generados"])
-
-    texto_a_revisar = st.text_area("Texto a revisar:", value=texto_automatico, height=80)
-
-    TRADEMARK_BLACKLIST = ["disney", "marvel", "star wars", "nike", "harry potter", "velcro", "onesie", "jeep", "taylor swift", "stanley", "snoopy", "mickey", "nfl", "nba", "barbie", "lego", "tupperware", "taser", "chapstick", "super bowl", "peanuts", "pokemon", "hello kitty", "bluey", "shrek"]
-
-    if st.button("🛡️ Escanear Listado"):
-        if texto_a_revisar:
-            texto_limpio = texto_a_revisar.lower()
-            alertas = [marca for marca in TRADEMARK_BLACKLIST if marca in texto_limpio]
-            if alertas: st.error(f"⚠️ ¡PELIGRO! Marcas registradas detectadas: **{', '.join(alertas).title()}**")
-            else: st.success("✅ ¡Listado Limpio!")
-        else: st.warning("No hay texto para revisar aún.")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 8. CALENDARIO Y CUPONES
-    # -----------------------------
-    st.header("📅 8. Calendario POD y Retención")
-    tab_cal, tab_cup = st.tabs(["⏰ Calendario de Subidas", "💌 Estrategia de Cupones"])
-
-    with tab_cal:
-        col_q1, col_q2 = st.columns(2)
-        with col_q1:
-            st.markdown("**Q1:** Valentine's, St. Patrick's, Easter, Mother's Day prep.")
-            st.markdown("**Q2:** Father's Day, Graduaciones, Teacher Appreciation.")
-        with col_q2:
-            st.markdown("**Q3:** Back to School, Halloween Prep, Thanksgiving.")
-            st.markdown("**Q4:** Christmas, Ugly Sweaters, Black Friday, New Year.")
-
-    with tab_cup:
-        st.markdown("Ve a **Marketing > Sales and Discounts** en Etsy:")
-        st.info("**1. Carrito Abandonado** - 15% OFF (VUELVE15)")
-        st.success("**2. Post-Compra** - 20% OFF (GRACIAS20)")
-        st.warning("**3. Favoritos** - 10% OFF (TUYO10)")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 9. AUDITORÍA DE TIENDA
-    # -----------------------------
-    st.header("📈 9. Auditoría de Tienda (CSV)")
-    uploaded_csv = st.file_uploader("Sube tu archivo EtsySoldOrders.csv", type=["csv"])
-
-    if uploaded_csv:
-        try:
-            df = pd.read_csv(uploaded_csv)
-            item_col = [col for col in df.columns if 'Item Name' in col or 'Artículo' in col or 'Title' in col]
-            qty_col = [col for col in df.columns if 'Quantity' in col or 'Cantidad' in col]
-            
-            if item_col and qty_col:
-                ventas = df.groupby(item_col[0])[qty_col[0]].sum().reset_index().sort_values(by=qty_col[0], ascending=False)
-                st.subheader("🏆 Tus Top 5 Productos")
-                st.dataframe(ventas.head(5), use_container_width=True)
-                st.subheader("💀 Productos Muertos")
-                st.dataframe(ventas.tail(5), use_container_width=True)
-            else: st.error("No se encontraron columnas de Item y Quantity.")
-        except Exception as e: st.error(f"Error al leer el archivo: {e}")
-
-    st.markdown("---")
-
-    # -----------------------------
-    # 10. RADAR DINÁMICO
-    # -----------------------------
-    st.header("🔮 10. Radar Dinámico de Tendencias")
-    mes_actual = datetime.datetime.now().month
-    mes_objetivo = (mes_actual + 2) % 12
-    if mes_objetivo == 0: mes_objetivo = 12
-    meses = {1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"}
-
-    st.markdown(f"Estamos en **{meses[mes_actual]}**. Deberías estar subiendo diseños para **{meses[mes_objetivo]}**.")
-
-    tendencias_futuras = {
-        1: ["St. Patrick's Day (Marzo)", "Easter (Marzo/Abril)"], 2: ["Mother's Day (Mayo)"],
-        3: ["Teacher Appreciation (Mayo)", "Father's Day (Junio)"], 4: ["Father's Day (Junio)", "Pride Month (Junio)"],
-        5: ["Julio 4th", "Camping (Julio)"], 6: ["Back to School", "Halloween (Agosto)"],
-        7: ["Halloween (Octubre)", "Thanksgiving (Noviembre)"], 8: ["Christmas (Diciembre)", "Navidad Mascotas"],
-        9: ["Black Friday Prep", "Winter"], 10: ["New Year's Eve (Enero)", "Valentine's Day Prep"],
-        11: ["Valentine's Day", "Super Bowl"], 12: ["Valentine's Day", "100 Days of School"]
-    }
-
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        st.success("**NICHOS EN AUGE HOY:**")
-        for t in tendencias_futuras.get(mes_actual, ["Temporada general"]): st.write(f"✅ {t}")
+        tienda = st.radio("Tienda:", ["🐾 Tienda POD Mascotas", "💌 Tienda Digital"])
     with col_t2:
-        st.warning("**ESTILO EN TENDENCIA:**")
-        st.write("🎨 Retro Wavy Text, Minimalist Line Art, Bootleg Rap 90s")
+        st.session_state["niche"] = st.selectbox("Sub-Nicho Estratégico:", [
+            "Memorial (Mascotas Fallecidas)", "Mascotas de Servicio / Apoyo", "Cumpleaños Mascota (Paw-ty)", 
+            "Rescate / Adopción (Gotcha Day)", "Divorcio / Soltería", "Boda / Aniversario", "Maestra / Profesiones"
+        ])
 
-    st.markdown("---")
+    st.header("3️⃣ Selección de Producto Printify (Bestsellers)")
+    productos_mascotas = [
+        "Bella+Canvas 3001 (T-Shirt)", "Gildan 18000 (Crewneck)", "Gildan 18500 (Hoodie)", "Comfort Colors 1717",
+        "White Ceramic Mug 11oz", "White Ceramic Mug 15oz", "Enamel Campfire Mug", "Pet Bandana", "Pet Bowl", 
+        "Pet Bed", "Pet ID Tag", "Acrylic Plaque", "Velveteen Plush Blanket", "Canvas Gallery Wrap", "Tote Bag"
+    ]
+    cols_p = st.columns(3)
+    for i, p in enumerate(productos_mascotas):
+        with cols_p[i % 3]:
+            if st.button(p): st.session_state["product"] = p
+    
+    if st.session_state["product"]: 
+        st.success(f"📦 Producto Seleccionado: {st.session_state['product']}")
 
-    # -----------------------------
-    # 11. MÁQUINA DE IDEAS
-    # -----------------------------
-    st.header("💡 11. Máquina de Ideas")
-    col_idea1, col_idea2 = st.columns(2)
+# --- TAB 2: SEO Y LISTADO ---
+with tab2:
+    if st.session_state["product"] and st.session_state["detected_text"]:
+        
+        # --- NUEVA SECCIÓN: API EN TIEMPO REAL ---
+        st.markdown("### 🔍 Motor SEO en Tiempo Real (Estilo eRank)")
+        st.markdown("Conéctate a la barra de búsqueda de Etsy para ver qué están tecleando los compradores HOY.")
+        
+        col_api1, col_api2 = st.columns([3, 1])
+        with col_api1:
+            kw_semilla = st.text_input("Semilla SEO (Keyword corta para investigar):", value=limpiar_producto_en(st.session_state["product"]))
+        with col_api2:
+            st.write("") # Espaciador
+            st.write("")
+            if st.button("🕵️‍♂️ Extraer Tags (Live)"):
+                with st.spinner("Scrapeando Etsy..."):
+                    st.session_state["live_tags"] = obtener_keywords_tiempo_real_etsy(kw_semilla)
+        
+        if st.session_state["live_tags"]:
+            st.success("🔥 Keywords calientes extraídas directamente de Etsy:")
+            st.code(", ".join(st.session_state["live_tags"][:13]))
+        
+        st.markdown("---")
+        
+        # --- GENERACIÓN TRADICIONAL / ESTRATÉGICA ---
+        if st.button("🚀 GENERAR LISTADO COMPLETO (Títulos + Descripción)"):
+            with st.spinner("Inyectando estrategia POD..."):
+                base_kw = extraer_keywords_texto(st.session_state["detected_text"])
+                
+                t_en, t_es, t_msgs = st.tabs(["🇺🇸 Listado Inglés (Etsy USA)", "🇪🇸 Referencia Español", "💬 Mensajes Post-Venta"])
+                
+                with t_en:
+                    st.subheader("📌 Títulos Dinámicos (Pirámide SEO)")
+                    titulos = generar_titulos_venta(base_kw, st.session_state["product"], st.session_state["niche"], st.session_state["detected_text"], "en")
+                    for t, s in titulos: st.success(f"Score {s}%: {t}")
 
-    with col_idea1:
-        if st.button("🎲 Generar Idea para POD Mascotas"):
-            mascotas = ["Perro de Tres Patas", "Gato Ciego", "Perro de Terapia", "Mascota Rescatada", "Hurón Apoyo", "Golden Senior"]
-            angulos = ["Memorial Acuarela", "Gotcha Day", "Line Art Minimalista", "Empleado del Mes"]
-            productos = ["Taza Interior Negro", "Manta Suave", "Adorno Acrílico", "Vaso Térmico"]
-            st.success(f"**Nicho:** {random.choice(mascotas)}\n\n**Ángulo:** {random.choice(angulos)}\n\n**Producto:** {random.choice(productos)}")
+                    st.subheader("🏷️ 13 Etiquetas Híbridas (Tus Reglas + Live API)")
+                    tags_base = generar_tags_etsy(base_kw, st.session_state["product"], st.session_state["niche"], "en")
+                    # Mezclamos tags programados con los de la API en tiempo real si existen
+                    tags_finales = st.session_state["live_tags"][:6] + tags_base
+                    # Limpiamos duplicados y cortamos a 13
+                    tags_finales = list(dict.fromkeys([t for t in tags_finales if len(t) <= 20]))[:13]
+                    
+                    st.code(", ".join(tags_finales))
 
-    with col_idea2:
-        if st.button("🎲 Generar Idea para Invitaciones"):
-            eventos = ["Fiesta de Divorcio", "Cumpleaños 15 Perro", "Adopción Padrastro", "Celebración de Vida", "Fiesta Vasectomía"]
-            estilos = ["Acuarela Floral Oscura", "Retro 70s", "Minimalista B/N", "Periódico Vintage", "Boleto Falso"]
-            st.success(f"**Evento:** {random.choice(eventos)}\n\n**Estilo:** {random.choice(estilos)}")
+                    st.subheader("📝 Descripción con Inyección Printify")
+                    st.code(generar_descripcion_vendedora(st.session_state["product"], st.session_state["niche"], st.session_state["detected_text"], "en"))
+
+                with t_es:
+                    st.write(generar_descripcion_vendedora(st.session_state["product"], st.session_state["niche"], st.session_state["detected_text"], "es"))
+
+                with t_msgs:
+                    st.subheader("💬 Comunicación con el Cliente")
+                    st.info("Envío de Muestra (Proof):")
+                    st.code(f"Hi! Attached is the proof for your custom {st.session_state['product']}. Please approve!")
+                    st.info("Recordatorio de Aprobación:")
+                    st.code("Friendly reminder! We need your approval to send your order to production.")
+
+        st.markdown("---")
+        with st.expander("🖼️ RECURSOS DE MOCKUPS Y PLACEIT"):
+            col_m1, col_m2 = st.columns(2)
+            with col_m1:
+                st.write("[👕 Mockups de Camisetas](https://placeit.net/c/mockups/stages/t-shirt-mockup)")
+                st.write("[☕ Mockups de Tazas](https://placeit.net/c/mockups/stages/mug-mockup)")
+            with col_m2:
+                st.write("[🐾 Mockups de Mascotas](https://placeit.net/c/mockups/stages/pet-bandana-mockup)")
+                st.write("[🛌 Mockups de Cobijas](https://placeit.net/c/mockups/stages/blanket-mockup)")
+
+    else:
+        st.warning("⚠️ Primero detecta el texto del diseño y selecciona un producto en la Pestaña 1.")
+
+# --- TAB 3: RENTABILIDAD ---
+with tab3:
+    st.header("💰 Calculadora de Rentabilidad Real")
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        st.subheader("📦 Costos Printify")
+        costo_p = st.number_input("Costo Producción $", value=12.50)
+        envio_p = st.number_input("Costo Envío $", value=4.75)
+    with col_c2:
+        st.subheader("🛍️ Ingresos Etsy")
+        precio_v = st.number_input("Precio de Venta $", value=29.99)
+        envio_v = st.number_input("Envío Cobrado al Cliente $", value=0.0)
+    
+    if st.button("📊 Calcular Margen Neto"):
+        ingreso_t = precio_v + envio_v
+        fee_etsy = 0.45 + (ingreso_t * 0.095)
+        total_costos = costo_p + envio_p + fee_etsy
+        ganancia = ingreso_t - total_costos
+        margen = (ganancia / ingreso_t) * 100
+        
+        col_res1, col_res2 = st.columns(2)
+        col_res1.metric("Ganancia Neta", f"${ganancia:.2f}")
+        col_res2.metric("Margen de Beneficio", f"{margen:.1f}%")
+        
+        if margen > 30: st.success("🔥 ¡Excelente margen! Producto apto para Etsy Ads.")
+        elif margen > 15: st.warning("⚠️ Margen moderado. Ten cuidado con los descuentos.")
+        else: st.error("🚨 Margen muy bajo. Sube el precio o cambia de proveedor.")
+
+# --- TAB 4: LEGAL Y RADAR ---
+with tab4:
+    st.header("🚨 Radar de Trademarks y Protección")
+    texto_para_escanear = st.text_area("Pega aquí tu título o etiquetas para buscar infracciones:")
+    
+    BLACKLIST = ["disney", "marvel", "nike", "star wars", "harry potter", "velcro", "onesie", "jeep", "taylor swift", "stanley", "snoopy", "mickey", "nfl", "nba", "barbie", "lego"]
+    
+    if st.button("🛡️ Escanear Listado"):
+        hallazgos = [m.upper() for m in BLACKLIST if m in texto_para_escanear.lower()]
+        if hallazgos:
+            st.error(f"❌ PELIGRO: Se detectaron términos con Trademark: {', '.join(hallazgos)}")
+        else:
+            st.success("✅ ¡Listado Limpio! No se detectaron marcas registradas comunes.")
+
+# --- TAB 5: AUDITORÍA E IDEAS ---
+with tab5:
+    st.header("🔮 Máquina de Ideas y Tendencias")
+    
+    col_i1, col_i2 = st.columns(2)
+    with col_i1:
+        st.subheader("📅 Calendario Estratégico")
+        mes_actual = datetime.datetime.now().month
+        mes_meta = (mes_actual + 2) % 12 or 12
+        st.info(f"Estamos en el mes {mes_actual}. Tu enfoque actual debe ser: **Diseños para el mes {mes_meta}.**")
+        
+        if st.button("🎲 Generar Idea Ganadora"):
+            conceptos = ["Acuarela", "Line Art", "Caricatura", "90s Bootleg"]
+            nichos = ["Gato Ciego", "Perro de Tres Patas", "Maestra de Preescolar", "Novia en Despedida", "Abuela primeriza"]
+            st.success(f"Prueba este nicho: **{random.choice(nichos)}** con un estilo **{random.choice(conceptos)}**.")
+
+    with col_i2:
+        st.subheader("📈 Auditoría CSV")
+        up_csv = st.file_uploader("Sube tu archivo EtsySoldOrders.csv para ver qué se vende más:", type=["csv"])
+        if up_csv:
+            df_ventas = pd.read_csv(up_csv)
+            st.write("Resumen de tus Top Ventas:")
+            st.dataframe(df_ventas.head())
+
+st.markdown("---")
+st.caption("Etsy AI Listing Generator v3.0 | Módulo 'Live Search' Activado")
