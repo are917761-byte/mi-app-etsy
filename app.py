@@ -284,7 +284,6 @@ with tab1:
 st.image(image, caption="Vista previa (Fondo ajustado para lectura)", width=300)
 
     # --- NUEVA LÓGICA ESTRATÉGICA ---
-    st.markdown("---")
     st.subheader("📝 ¿Cómo definimos el SEO de tu diseño?")
     st.markdown("Si tu diseño tiene texto (ej: una frase), usa el OCR. Si es **SOLO GRÁFICO** (ej: retrato de perro acuarela), escribe el concepto tú misma.")
 
