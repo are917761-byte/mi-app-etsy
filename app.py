@@ -252,16 +252,34 @@ st.info(f"🎯 **Enfoque actual:** {tienda_seleccionada} ➔ {subnicho} ({estilo
 st.header("3️⃣ Selección de Producto")
 
 if tienda_seleccionada == "🐾 Tienda POD Mascotas":
-    st.write("**Catálogo Estratégico Printify:**")
-    # Productos específicos para tus nichos de mascotas
+    st.write("**Catálogo Estratégico Printify (Bestsellers + Mascotas):**")
+    
     productos_mascotas = [
-        "Velveteen Plush Blanket (Ideal para Memorial)",
-        "White Ceramic Mug 15oz (Dueños de Apoyo Emocional)",
-        "Square Canvas (Retrato Acuarela Premium)",
-        "Pet Bandana (Cumpleaños Mascota)",
-        "Acrylic Plaque (Memorial Transparente)",
-        "Gildan 18500 Hoodie (Ropa de Dueño)"
+        # --- BESTSELLERS GLOBALES (Para los dueños) ---
+        "Bella+Canvas 3001 (T-Shirt Bestseller)",
+        "Gildan 18000 (Crewneck Sweatshirt)",
+        "Gildan 18500 (Hoodie Clásica)",
+        "Comfort Colors 1717 (Camiseta Premium)",
+        "Gildan 5000 (Camiseta Económica)",
+        "White Ceramic Mug 11oz & 15oz (Taza clásica)",
+        "Enamel Campfire Mug (Taza de campamento)",
+        "Tote Bag (Bolsa de tela)",
+        "Die-Cut Stickers (Pegatinas)",
+        "Velveteen Plush Blanket (Cobija Suave)",
+        "Canvas Gallery Wraps (Lienzo Premium)",
+        "Acrylic Plaque (Placa Acrílica Memorial)",
+        
+        # --- PRODUCTOS EXCLUSIVOS PARA MASCOTAS ---
+        "Pet Bandana (Bandana para Cuello)",
+        "Pet Bowl (Plato de Cerámica/Acero)",
+        "Pet Feeding Mat (Tapete para Platos)",
+        "Pet Bed (Cama Suave para Mascotas)",
+        "Pet Tank Top (Camiseta para Perros)",
+        "Pet Tag (Placa de Identificación Hueso/Círculo)",
+        "Pet Collar (Collar Ajustable)"
     ]
+    
+    # Lo dividimos en 3 columnas para que se vea ordenado
     cols_prod = st.columns(3)
     for idx, producto in enumerate(productos_mascotas):
         with cols_prod[idx % 3]:
