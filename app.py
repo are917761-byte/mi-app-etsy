@@ -282,7 +282,6 @@ with tab1:
             image = image.convert("RGB")
 
 st.image(image, caption="Vista previa (Fondo ajustado para lectura)", width=300)
-        st.markdown("---")
 
     # --- NUEVA LÓGICA ESTRATÉGICA ---
     st.markdown("---")
@@ -494,18 +493,35 @@ st.markdown("---")
 # -----------------------------
 # 5. RECURSOS EXTRA (MOCKUPS)
 # -----------------------------
-st.header("5️⃣ Recursos Rápidos (Placeit Mockups)")
-col_m1, col_m2 = st.columns(2)
-with col_m1:
-    st.markdown("[👕 T-shirt / Camiseta](https://placeit.net/c/mockups/stages/t-shirt-mockup)")
-    st.markdown("[🧥 Hoodie / Sudadera](https://placeit.net/c/mockups/stages/hoodie-mockup)")
-    st.markdown("[☕ Mug / Taza Cerámica](https://placeit.net/c/mockups/stages/mug-mockup)")
-    st.markdown("[🥤 Tumbler / Vaso Térmico](https://placeit.net/c/mockups/stages/tumbler-mockup)")
-with col_m2:
-    st.markdown("[🖼️ Canvas / Lienzo](https://placeit.net/c/mockups/stages/canvas-mockup)")
-    st.markdown("[🛌 Blanket / Cobija](https://placeit.net/c/mockups/stages/blanket-mockup)")
-    st.markdown("[🎄 Ornament / Adorno](https://placeit.net/c/mockups/stages/ornament-mockup)")
-    st.markdown("[👜 Tote Bag / Bolsa](https://placeit.net/c/mockups/stages/tote-bag-mockup)")
+st.subheader("🖼️ Mockups Populares (Placeit)")
+    
+    col_m1, col_m2 = st.columns(2)
+    
+    with col_m1:
+        st.markdown("**Ropa y Básicos**")
+        st.markdown("[👕 T-shirt / Camisetas (B+C 3001, Gildan)](https://placeit.net/c/mockups/stages/t-shirt-mockup)")
+        st.markdown("[🧥 Hoodies / Sudaderas](https://placeit.net/c/mockups/stages/hoodie-mockup)")
+        st.markdown("[👜 Tote Bags / Bolsas](https://placeit.net/c/mockups/stages/tote-bag-mockup)")
+        st.markdown("[✨ Stickers / Pegatinas](https://placeit.net/c/mockups/stages/sticker-mockup)")
+        
+        st.markdown("<br>**Hogar y Regalos (Memoriales)**", unsafe_allow_html=True)
+        st.markdown("[☕ Mugs / Tazas (11oz & 15oz)](https://placeit.net/c/mockups/stages/mug-mockup)")
+        st.markdown("[🥤 Tumblers / Vasos Térmicos](https://placeit.net/c/mockups/stages/tumbler-mockup)")
+        st.markdown("[🖼️ Canvas / Lienzos](https://placeit.net/c/mockups/stages/canvas-mockup)")
+        st.markdown("[🛌 Blankets / Cobijas](https://placeit.net/c/mockups/stages/blanket-mockup)")
+        st.markdown("[🎄 Ornaments / Adornos](https://placeit.net/c/mockups/stages/ornament-mockup)")
+
+    with col_m2:
+        st.markdown("**Exclusivos para Mascotas**")
+        st.markdown("[🐾 Pet Bandanas / Paliacates](https://placeit.net/c/mockups/stages/pet-bandana-mockup)")
+        st.markdown("[🥣 Pet Bowls / Platos](https://placeit.net/c/mockups/stages/pet-bowl-mockup)")
+        st.markdown("[🛏️ Pet Beds / Camas](https://placeit.net/c/mockups/stages/pet-bed-mockup)")
+        st.markdown("[🐕 Pet Tank Tops / Ropita](https://placeit.net/c/mockups/stages/dog-t-shirt-mockup)")
+        st.markdown("[🏷️ Pet Collars / Collares](https://placeit.net/c/mockups/stages/pet-collar-mockup)")
+        
+        st.markdown("<br>**Digitales e Invitaciones**", unsafe_allow_html=True)
+        st.markdown("[💌 Invitations / Tarjetas Impresas](https://placeit.net/c/mockups/stages/invitation-mockup)")
+        st.markdown("[📱 Mobile Evites / Smartphones](https://placeit.net/c/mockups/stages/iphone-mockup)")
 
 st.markdown("---")
 
