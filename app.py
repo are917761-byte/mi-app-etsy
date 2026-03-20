@@ -345,4 +345,4 @@ elif menu == "💡 7. Máquina de Ideas":
             angulo = random.choice(["Memorial Acuarela", "Gotcha Day", "Line Art Minimalista", "Óleo Renacentista"])
             prod = random.choice(["Manta", "Adorno Acrílico", "Vaso Térmico", "Lienzo"])
             st.success(f"**Vende un(a)** {prod} **estilo** {angulo} **para dueños de** {mascota}.")
-    with c2
+    with c2:
