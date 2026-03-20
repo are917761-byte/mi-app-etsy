@@ -211,22 +211,45 @@ def generar_tags_etsy(keywords, product, niche, lang="en"):
 
 def obtener_detalles_printify(producto):
     p = producto.lower()
-    if "3001" in p or "t-shirt" in p:
+    
+    # --- ROPA ---
+    if "3001" in p or "t-shirt" in p or "camiseta" in p:
         return "👕 ITEM SPECS (Bella+Canvas 3001):\n- 100% Airlume combed and ringspun cotton (ultra-soft!)\n- Light fabric (4.2 oz/yd²)\n- Retail fit & Tear away label\n- Runs true to size"
-    elif "18000" in p or "18500" in p or "hoodie" in p or "sweatshirt" in p:
+    
+    elif "18000" in p or "18500" in p or "hoodie" in p or "sweatshirt" in p or "sudadera" in p:
         return "🧥 ITEM SPECS (Premium Blend):\n- 50% cotton, 50% polyester\n- Medium-heavy fabric for cozy warmth\n- Classic fit & Tear-away label\n- Runs true to size"
-    elif "mug" in p:
+    
+    elif "1717" in p or "comfort colors" in p:
+        return "👕 ITEM SPECS (Comfort Colors 1717):\n- 100% ring-spun cotton\n- Heavy fabric (6.1 oz/yd²)\n- Relaxed fit, garment-dyed fabric\n- Double-needle armhole, sleeve and bottom hems"
+
+    # --- HOGAR Y TAZAS ---
+    elif "mug" in p or "taza" in p:
         return "☕ ITEM SPECS (Ceramic Mug):\n- High-quality white ceramic\n- Lead and BPA-free\n- Microwave and dishwasher safe\n- Vibrant, fade-resistant wrap-around print"
-    elif "blanket" in p:
+    
+    elif "blanket" in p or "cobija" in p or "manta" in p:
         return "🛌 ITEM SPECS (Velveteen Plush):\n- 100% Polyester for extreme, cozy softness\n- Double needle topstitch on all seams\n- Vibrant, high-detail one-sided print\n- Machine washable (cold)"
-    elif "plaque" in p:
-        return "✨ ITEM SPECS (Acrylic Plaque):\n- Premium, crystal-clear acrylic\n- Vibrant, fade-resistant printed design\n- Sleek and modern aesthetic, perfect for display"
+    
+    elif "plaque" in p or "placa" in p or "acrylic" in p:
+        return "✨ ITEM SPECS (Acrylic Plaque):\n- Premium, crystal-clear acrylic (3mm thickness)\n- Vibrant, fade-resistant printed design\n- Sleek wooden base (if selected)\n- Perfect for memorial or desk display"
+
+    # --- EXCLUSIVOS MASCOTAS (¡Nuevo!) ---
     elif "bandana" in p:
-        return "🐾 ITEM SPECS (Pet Bandana):\n- 100% soft spun polyester\n- Breathable, durable, and lightweight\n- One-sided vibrant print\n- Perfect fit for your furry friend"
-    elif "digital" in p or "evite" in p or "sign" in p:
-        return "📱 ITEM SPECS (Digital File):\n- High-resolution digital download (JPEG/PDF)\n- NO physical item will be shipped\n- Ready to print at home, local print shop, or send via text/email"
-    else:
-        return "✨ ITEM SPECS:\n- Premium quality materials\n- Vibrant and durable printing\n- Carefully crafted to order"
+        return "🐾 ITEM SPECS (Pet Bandana):\n- 100% soft spun polyester\n- Breathable, durable, and lightweight\n- Hemmed edges for extra durability\n- One-sided vibrant print"
+    
+    elif "bowl" in p or "plato" in p:
+        return "🥣 ITEM SPECS (Pet Bowl):\n- Double-wall stainless steel or heavy ceramic\n- Anti-slip rubber base (Steel version)\n- Dishwasher safe (top rack)\n- Large capacity for food or water"
+    
+    elif "bed" in p or "cama" in p:
+        return "🛏️ ITEM SPECS (Pet Bed):\n- 100% polyester print area with dark brown fleece back\n- Polyester filling for maximum comfort\n- Concealed zipper for easy cleaning\n- Durable and water-resistant bottom"
+    
+    elif "tag" in p or "placa" in p:
+        return "🏷️ ITEM SPECS (Pet Tag):\n- High-quality solid metal (White Coated)\n- Double-sided custom printing\n- Includes metal ring for easy collar attachment"
+
+    # --- DIGITALES ---
+    elif "digital" in p or "invitation" in p or "evite" in p:
+        return "📱 ITEM SPECS (Digital File):\n- High-resolution digital download (JPEG/PDF)\n- NO physical item will be shipped\n- Ready to print at home or send via text/email"
+    
+    return "✨ ITEM SPECS:\n- Premium quality materials\n- Vibrant and durable printing\n- Carefully crafted to order just for you"
 
 def generar_descripcion_vendedora(product, niche, texto_detectado, lang="en"):
     # Limpiar palabras para SEO
