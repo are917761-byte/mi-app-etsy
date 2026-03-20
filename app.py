@@ -115,75 +115,97 @@ def limpiar_nicho_en(nicho):
 # =========================
 
 def generar_titulos_venta(keywords, product, niche, texto_detectado, lang="en"):
-    kw1 = keywords[0].title() if len(keywords) > 0 else "Custom"
-    kw2 = keywords[1].title() if len(keywords) > 1 else "Design"
+    """
+    Estructura de Pirámide de Keywords:
+    1. [Héroe]: Custom + Producto + Nicho Específico (Lo que es)
+    2. [Intención]: Personalized + Keyword de Regalo (Para quién es)
+    3. [Atributo]: Estilo de Arte + Ocasión (Por qué lo compran)
+    """
+    
+    # Limpiamos y preparamos variables SEO
+    prod_seo = limpiar_producto_en(product) if lang == "en" else product.split(" (")[0]
+    nicho_seo = limpiar_nicho_en(niche) if lang == "en" else niche.split(" (")[0]
+    estilo_seo = "Watercolor" if "Acuarela" in niche else "Minimalist"
+    
+    # El texto detectado o manual es nuestra "Keyword de Oro"
+    kw_oro = texto_detectado.title() if texto_detectado else "Custom Art"
 
     if lang == "en":
-        prod_en = limpiar_producto_en(product)
-        niche_en = limpiar_nicho_en(niche)
         titulos = [
-            (f"Custom {prod_en} for {niche_en}, Personalized {kw1} Gift, {kw2} Keepsake Present", 98),
-            (f"{niche_en} Gift Idea, Personalized {kw1} {prod_en}, Custom Name Design", 92),
-            (f"Personalized {kw1} {prod_en}, Unique Gift for {niche_en}, Custom Art Item", 85)
+            # OPCIÓN 1: EL BESTSELLER (Enfoque en Regalo Directo)
+            (f"Custom {prod_seo} for {nicho_seo}, Personalized {kw_oro} Gift, Unique {nicho_seo} Present", 100),
+            
+            # OPCIÓN 2: EL EMOCIONAL (Enfoque en el Memorial/Recuerdo)
+            (f"{nicho_seo} Memorial {prod_seo}, Personalized {kw_oro} Portrait, Sympathy Gift for Pet Loss", 95),
+            
+            # OPCIÓN 3: EL DESCRIPTIVO (Enfoque en el Estilo de Arte)
+            (f"{estilo_seo} {prod_seo} Custom {kw_oro}, {nicho_seo} Keepsake, Hand-Designed {prod_seo}", 88)
         ]
     else:
-        prod_es = product.split(" (")[0].strip()
-        nicho_es = niche.split(" (")[0].strip()
         titulos = [
-            (f"{prod_es} Personalizado para {nicho_es}, Regalo de {kw1}", 98),
-            (f"Regalo para {nicho_es}, {prod_es} con {kw1} Personalizado", 92),
-            (f"{prod_es} Único para {nicho_es}, Detalle de {kw1}", 85)
+            (f"{prod_seo} Personalizado para {nicho_seo}, Regalo de {kw_oro} Único", 100),
+            (f"Retrato de {nicho_seo} en {prod_seo}, Detalle Personalizado {kw_oro}", 92),
+            (f"{prod_seo} de {nicho_seo} Estilo {estilo_seo}, Recuerdo Especial {kw_oro}", 85)
         ]
+
+    # Limpieza final: Máximo 140 caracteres (límite de Etsy) y quitar comas sueltas
     return [(t[:140].strip(', '), score) for t, score in titulos]
 
 def generar_tags_etsy(keywords, product, niche, lang="en"):
+    """
+    Estrategia de Tags de Larga Cola (Long-tail):
+    1. Evita repetición exacta del título.
+    2. Usa sinónimos de nicho (Pet Mom vs Dog Lover).
+    3. Máximo 20 caracteres por tag (Regla estricta de Etsy).
+    """
     tags = []
     
+    # Limpieza de base
+    prod_seo = limpiar_producto_en(product).replace("Custom ", "").strip()
+    nicho_base = limpiar_nicho_en(niche).replace("Pet ", "").strip()
+    kw_oro = keywords[0][:15] if keywords else "Personalized"
+    
     if lang == "en":
-        # Limpiamos y quitamos la palabra "Custom" si venía pegada al producto
-        prod_en = limpiar_producto_en(product).replace("Custom ", "").replace("Custom", "").strip()
-        niche_en = limpiar_nicho_en(niche)
-        kw = keywords[0] if keywords else "art"
-        
-        # Arsenal de sinónimos: No repetimos para abarcar más mercado
+        # Bloque de Tags Estratégicos (Inglés para mercado USA)
         raw_tags = [
-            f"custom {prod_en}", 
-            f"{niche_en} gift", 
-            f"personalized {kw}",
-            f"unique {prod_en}", 
-            f"bespoke {niche_en}", 
-            "made to order",
-            f"gift for {niche_en}", 
-            "keepsake present", 
-            f"customized {kw}",
-            "special occasion", 
-            f"{kw} artwork", 
-            f"trendy {prod_en}", 
-            "thoughtful gift"
+            f"custom {prod_seo}",           # El qué es
+            f"{nicho_base} gift",           # El para quién
+            f"personalized {kw_oro}",       # El toque único
+            "birthday present",             # Ocasión 1
+            "memorial keepsake",            # Ocasión 2 (Sentimental)
+            f"{nicho_base} lover",          # Interés
+            "made to order gift",           # Valor artesanal
+            f"unique {prod_seo}",           # Diferenciador
+            "hand designed art",            # Calidad percibida
+            f"customized {nicho_base}",     # Variación SEO
+            "christmas gift idea",          # Temporalidad (Ajustable)
+            "pet loss sympathy",            # Nicho de dolor/regalo
+            f"{kw_oro} artwork"             # Categoría de diseño
         ]
     else:
-        prod_es = product.split(" (")[0].strip().lower()
-        nicho_es = niche.split(" (")[0].strip().lower()
-        kw = keywords[0] if keywords else "arte"
-        
+        # Bloque de Tags en Español (Referencia)
         raw_tags = [
-            f"{prod_es} custom", f"regalo {nicho_es}", f"{kw} personal",
-            f"regalo unico", "hecho a medida", f"para {nicho_es}",
-            "recuerdo especial", "arte personalizado", f"detalle {nicho_es}",
-            "regalo original", "tendencia", "regalo especial", f"{kw} a medida"
+            f"{prod_seo} con nombre", "regalo personalizado", f"detalle de {nicho_base}",
+            "regalo unico", "hecho a mano", f"para {nicho_base}",
+            "recuerdo especial", "arte a medida", f"fan de {nicho_base}",
+            "regalo original", "diseño exclusivo", "regalo de cumple", "regalo navidad"
         ]
-        
-    # Limpiar y asegurar que ninguna etiqueta pase de 20 caracteres (Regla Etsy)
+
+    # PROCESAMIENTO DE REGLAS ETSY
     for t in raw_tags:
-        clean_t = t.replace("  ", " ").strip()
-        if len(clean_t) <= 20 and clean_t not in tags: 
+        # 1. Limpiar espacios extra
+        clean_t = " ".join(t.split()).lower()
+        # 2. Validar longitud (Etsy corta a los 20 caracteres)
+        if len(clean_t) <= 20 and clean_t not in tags:
             tags.append(clean_t)
-        if len(tags) == 13: break
         
-    # Relleno de seguridad con más sinónimos si alguna etiqueta fue descartada por ser muy larga
-    fillers = ["bespoke gift", "personalized item", "unique present", "custom design"]
+        if len(tags) == 13: break
+
+    # RELLENO DE SEGURIDAD (Si faltan tags por ser muy largos)
+    fillers = ["gift for her", "gift for him", "personalized gift", "custom order"]
     for f in fillers:
-        if len(tags) < 13 and f not in tags: tags.append(f)
+        if len(tags) < 13 and f not in tags:
+            tags.append(f)
             
     return tags[:13]
 
@@ -258,11 +280,13 @@ Si deseas ver el arte antes de imprimir, por favor compra nuestro listado "Digit
 - Procesado en 2-5 días hábiles. ¡Rastreo incluido!"""
 
 # =========================
-# UI DE LA APLICACIÓN
+# UI DE LA APLICACIÓN - CORREGIDA
 # =========================
 
+tab1, tab2, tab3 = st.tabs(["🎨 Diseño y Nicho", "🚀 SEO & Listado", "📊 Calculadora y Legal"])
+
 # -----------------------------
-# 1. SUBIR DISEÑO
+# TAB 1: DISEÑO Y NICHO
 # -----------------------------
 with tab1:
     st.header("1️⃣ Subir diseño (OCR o Manual)")
@@ -271,54 +295,39 @@ with tab1:
     if uploaded_file:
         image = Image.open(uploaded_file)
         
-        # --- MAGIA PARA FONDOS TRANSPARENTES (EL ARREGLO) ---
+        # Corrección de fondo para legibilidad de OCR
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
-            # Usamos un fondo GRIS OSCURO (40, 40, 40) en lugar de blanco.
-            # Esto asegura que los diseños con letras blancas o negras sean visibles para el OCR.
             fondo_seguro = Image.new("RGB", image.size, (40, 40, 40))
             fondo_seguro.paste(image, mask=image.split()[-1])
-            image = fondo_seguro
+            image_to_show = fondo_seguro
         else:
-            image = image.convert("RGB")
+            image_to_show = image.convert("RGB")
 
-st.image(image, caption="Vista previa (Fondo ajustado para lectura)", width=300)
+        st.image(image_to_show, caption="Vista previa para análisis", width=300)
 
-    # --- NUEVA LÓGICA ESTRATÉGICA ---
-    st.subheader("📝 ¿Cómo definimos el SEO de tu diseño?")
-    st.markdown("Si tu diseño tiene texto (ej: una frase), usa el OCR. Si es **SOLO GRÁFICO** (ej: retrato de perro acuarela), escribe el concepto tú misma.")
+        st.subheader("📝 ¿Cómo definimos el SEO de tu diseño?")
+        st.markdown("Si tu diseño tiene texto, usa el OCR. Si es **GRÁFICO**, descríbelo manualmente.")
 
-    col_ocr1, col_ocr2 = st.columns(2)
+        col_ocr1, col_ocr2 = st.columns(2)
 
-    with col_ocr1:
-        # Tu botón OCR original
-        if st.button("👁️ Detectar texto (OCR)"):
-            with st.spinner("Analizando imagen..."):
-                texto = extraer_texto_ocr(reader, image)
-                st.session_state["detected_text"] = texto
-                if not texto.strip():
-                    st.info("OCR no detectó texto. Introduce el concepto manualmente a la derecha.")
-                else:
+        with col_ocr1:
+            if st.button("👁️ Detectar texto (OCR)"):
+                with st.spinner("Analizando imagen..."):
+                    texto = extraer_texto_ocr(reader, image_to_show)
+                    st.session_state["detected_text"] = texto
+                    if not texto.strip():
+                        st.info("OCR no detectó texto. Usa la entrada manual.")
                     st.rerun()
 
-    with col_ocr2:
-        # Entrada manual para diseños puramente gráficos
-        st.markdown("**Entrada Manual (Para diseños gráficos):**")
-        concepto_manual = st.text_input(
-            "Describe lo que se ve en la imagen (ej: Retrato acuarela Golden Retriever):",
-            value=st.session_state["detected_text"], # Se pre-llena con OCR si hubo, o vacío si no
-            key="final_concept_input"
-        )
-        
-        # Actualizamos la variable central del SEO con lo que tú escribas
-        if concepto_manual != st.session_state["detected_text"]:
-             st.session_state["detected_text"] = concepto_manual
-
-# --- Esta condición es la que desbloquea el SEO ---
-if st.session_state["detected_text"]:
-    st.success(f"✅ Concepto '{st.session_state['detected_text']}' guardado en memoria. ¡Procede al SEO!")
-elif uploaded_file:
-    st.warning("⚠️ Ejecuta el OCR o escribe el concepto manual arriba para activar el SEO.")
-
+        with col_ocr2:
+            concepto_manual = st.text_input(
+                "Concepto visual (ej: Retrato acuarela Golden Retriever):",
+                value=st.session_state["detected_text"],
+                key="final_concept_input"
+            )
+            if concepto_manual != st.session_state["detected_text"]:
+                st.session_state["detected_text"] = concepto_manual
+                
 # -----------------------------
 # 2. PERFIL DE TIENDA
 # -----------------------------
@@ -493,6 +502,15 @@ st.markdown("---")
 # 5. RECURSOS EXTRA (MOCKUPS)
 # -----------------------------
 st.subheader("🖼️ Mockups Populares (Placeit)")
+
+with st.expander("🎨 ESTRATEGIA DE MOCKUPS GANADORES (Modo Pro)", expanded=True):
+    st.markdown("""
+    ### 🚀 Haz que el cliente se detenga (Stop the Scroll)
+    1. **La Foto 1 es tu vitrina:** Añade un texto temporal que diga *'Your Pet's Name Here'* o *'Custom Art'*.
+    2. **Psicología del Contraste:** Producto blanco -> Fondo oscuro o madera. Producto oscuro -> Fondo iluminado.
+    3. **Humaniza:** Los mockups con manos o personas convierten un **40% más** que los productos flotantes.
+    """)
+    st.info("💡 **Tip de Estratega:** En la Foto 1, añade una pequeña marca de agua con el logo de tu tienda para evitar que otros vendedores te roben el diseño.")
     
     col_m1, col_m2 = st.columns(2)
     
