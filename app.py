@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import easyocr
 import numpy as np
 import pandas as pd
@@ -172,9 +172,10 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
     st.title("Visión Artificial (Extraer Texto)")
     st.markdown("Sube tu PNG transparente o Mockup. La IA leerá las letras para construir tu SEO.")
     
-    uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"])
+    # Llave única para el uploader
+    uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"], key="img_uploader")
     
-    # 1. Guardar la imagen en la memoria profunda si se sube un archivo
+    # 1. Guardar la imagen en la memoria profunda
     if uploaded_file:
         image = Image.open(uploaded_file)
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
@@ -186,10 +187,10 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
 
     # 2. Mostrar la imagen SIEMPRE que esté en memoria
     if "imagen_memoria" in st.session_state:
-        st.image(st.session_state["imagen_memoria"], caption="Imagen en memoria", width=300)
+        st.image(st.session_state["imagen_memoria"], caption="Imagen en memoria lista para analizar", width=300)
 
-        # 3. Botón para leer el texto (ya sin el código que la borraba)
-        if st.button("👁️ Leer Texto del Diseño"):
+        # 3. Botón con llave única anti-errores
+        if st.button("👁️ Leer Texto del Diseño", key="btn_leer_ocr_unico"):
             with st.spinner("Analizando pixeles..."):
                 texto = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
                 st.session_state["detected_text"] = texto
@@ -197,41 +198,17 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
     # 4. Mostrar y editar el texto detectado
     if st.session_state.get("detected_text"):
         st.subheader("Texto detectado (Edítalo para que quede perfecto):")
-        nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"])
+        nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"], key="input_txt_unico")
         
         if nuevo_texto != st.session_state["detected_text"]:
             st.session_state["detected_text"] = nuevo_texto
             
-        st.success("✅ ¡Texto guardado! Ya puedes ir al menú '2. Catálogo y Tiendas'.")
-    
-    if uploaded_file:
-        image = Image.open(uploaded_file)
-        if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
-            fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
-            fondo_blanco.paste(image, mask=image.split()[-1])
-            image = fondo_blanco
-        else:
-            image = image.convert("RGB")
-
-        st.image(image, caption="Vista previa del archivo", width=300)
-
-        if st.button("👁️ Leer Texto del Diseño"):
-            with st.spinner("Analizando pixeles..."):
-                texto = extraer_texto_ocr(reader, image)
-                st.session_state["detected_text"] = texto
-                st.rerun()
-
-    if st.session_state["detected_text"]:
-        st.subheader("Texto detectado (Edítalo para que quede perfecto):")
-        nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"])
-        if nuevo_texto != st.session_state["detected_text"]:
-            st.session_state["detected_text"] = nuevo_texto
-        st.success("¡Texto guardado en memoria! Ve al paso 2.")
+        st.success("✅ ¡Texto guardado! Ya no desaparecerá tu imagen. Ve al menú '2. Catálogo y Tiendas'.")
 
 elif menu == "🛒 2. Catálogo y Tiendas":
     st.title("Perfil de Tienda y Catálogo")
     
-    tienda = st.radio("Selecciona la Tienda a trabajar:", ["🐾 Tienda POD Mascotas", "💌 Tienda Digital (Invitaciones)"])
+    tienda = st.radio("Selecciona la Tienda a trabajar:", ["🐾 Tienda POD Mascotas", "💌 Tienda Digital (Invitaciones)"], key="radio_tienda")
     st.session_state["tienda"] = tienda
     
     col_n, col_e = st.columns(2)
@@ -262,7 +239,7 @@ elif menu == "🛒 2. Catálogo y Tiendas":
     cols = st.columns(3)
     for idx, p in enumerate(prods):
         with cols[idx % 3]:
-            if st.button(p):
+            if st.button(p, key=f"btn_prod_{idx}"):
                 st.session_state["product"] = p
                 
     if st.session_state["product"]:
@@ -274,7 +251,7 @@ elif menu == "🚀 3. Generador SEO":
     if not st.session_state["detected_text"] or not st.session_state["product"]:
         st.warning("⚠️ Faltan datos. Sube un diseño (Paso 1) y selecciona un producto (Paso 2) primero.")
     else:
-        if st.button("🚀 Generar Listado Optimizado"):
+        if st.button("🚀 Generar Listado Optimizado", key="btn_generar_seo"):
             with st.spinner("Creando SEO..."):
                 texto = st.session_state["detected_text"]
                 prod = st.session_state["product"]
@@ -304,4 +281,68 @@ elif menu == "🚀 3. Generador SEO":
 
 elif menu == "💬 4. Flujo de Muestras (Add-On)":
     st.title("Monetización de Revisiones (Add-On)")
-    tab1, tab2,
+    tab1, tab2, tab3 = st.tabs(["💰 Listado 'Digital Proof Add-On'", "💬 Mensaje: Enviar Muestra", "⏰ Mensaje: Alerta 24h"])
+    
+    with tab1:
+        st.info("Crea un producto digital en tu tienda con estos datos a $3.99 USD.")
+        st.subheader("Título")
+        st.code("Digital Proof Add-On for Custom Orders, Artwork Preview, See Design Before Printing", language="text")
+        st.subheader("Tags")
+        st.code("digital proof, artwork preview, add on listing, see before printing, custom order proof", language="text")
+        st.subheader("Descripción")
+        st.code("Purchase this listing IN ADDITION to your custom physical product if you wish to see a digital preview (proof) of the artwork before it is sent to production...", language="text")
+    with tab2:
+        st.code("Hi [Nombre],\n\nI have attached the proof (preview) for your custom piece. Please reply with 'APPROVED' if it looks perfect!\n\nBest, [Tu Nombre]", language="text")
+    with tab3:
+        st.code("Hi [Nombre],\n\nJust checking in! If I don't hear back by [Hora], I will proceed with printing to avoid shipping delays.\n\nThank you!", language="text")
+
+elif menu == "💰 5. Calculadora Financiera":
+    st.title("Calculadora de Rentabilidad Híbrida")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("Costos (Printify)")
+        costo_prod = st.number_input("Costo de Producción $", value=12.50, key="calc_prod")
+        costo_env = st.number_input("Costo Envío Printify $", value=4.79, key="calc_env")
+    with c2:
+        st.subheader("Estrategia Etsy")
+        precio_venta = st.number_input("Precio del Producto $", value=24.99, key="calc_precio")
+        estrategia = st.radio("Estrategia de Envío:", ["Cobrar Envío Aparte", "Envío Gratis (Absorbido)"], key="calc_estrategia")
+        cobro_cliente = st.number_input("Cobro de envío al cliente $", value=5.99, key="calc_cobro") if estrategia == "Cobrar Envío Aparte" else 0.0
+        
+    if st.button("📊 Calcular", key="btn_calcular"):
+        ingreso = precio_venta + cobro_cliente
+        etsy_fees = 0.45 + (ingreso * 0.095)
+        costo_total = costo_prod + costo_env + etsy_fees
+        ganancia = ingreso - costo_total
+        margen = (ganancia / ingreso) * 100 if ingreso > 0 else 0
+        
+        st.markdown("---")
+        r1, r2, r3 = st.columns(3)
+        r1.metric("Ingreso Bruto", f"${ingreso:.2f}")
+        r2.metric("Tarifas Etsy", f"${etsy_fees:.2f}")
+        r3.metric("Ganancia Neta", f"${ganancia:.2f}")
+        if margen >= 30: st.success(f"🔥 Margen del {margen:.1f}%. ¡Excelente para usar Ads!")
+        elif 15 <= margen < 30: st.warning(f"⚠️ Margen del {margen:.1f}%. Bueno, pero no uses Ads.")
+        else: st.error(f"🚨 Margen del {margen:.1f}%. Estás perdiendo dinero.")
+
+elif menu == "⚖️ 6. Radar Legal":
+    st.title("Protección de Propiedad Intelectual")
+    texto_auto = st.session_state["detected_text"] + " " + " ".join(st.session_state["tags_generados"])
+    texto_revisar = st.text_area("Texto a revisar (Autocompletado):", value=texto_auto, key="radar_txt")
+    
+    blacklist = ["disney", "marvel", "star wars", "nike", "harry potter", "velcro", "onesie", "jeep", "taylor swift", "stanley", "snoopy", "pokemon", "bluey"]
+    if st.button("🛡️ Escanear", key="btn_escanear"):
+        alertas = [m for m in blacklist if m in texto_revisar.lower()]
+        if alertas: st.error(f"⚠️ ¡PELIGRO TRADEMARK! Borra esto de tu listado: {', '.join(alertas).title()}")
+        else: st.success("✅ Listado Limpio de la Lista Negra.")
+
+elif menu == "💡 7. Máquina de Ideas":
+    st.title("Generador de Ideas (Océanos Azules)")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("🎲 Idea para Mascotas", key="btn_idea_masc"):
+            mascota = random.choice(["Perro 3 Patas", "Gato Ciego", "Perro de Terapia", "Mascota Rescatada", "Golden Senior"])
+            angulo = random.choice(["Memorial Acuarela", "Gotcha Day", "Line Art Minimalista", "Óleo Renacentista"])
+            prod = random.choice(["Manta", "Adorno Acrílico", "Vaso Térmico", "Lienzo"])
+            st.success(f"**Vende un(a)** {prod} **estilo** {angulo} **para dueños de** {mascota}.")
+    with c2
