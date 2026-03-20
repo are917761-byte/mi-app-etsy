@@ -168,15 +168,14 @@ if menu == "📊 Dashboard y Alertas":
 
 elif menu == "🔍 1. Subir Diseño (OCR)":
     st.title("Visión Artificial (Extraer Texto)")
-    st.markdown("Sube tu PNG transparente. Si la imagen NO tiene texto, escribe el concepto manualmente abajo.")
+    st.markdown("Sube tu PNG transparente o Mockup. La IA leerá las letras para construir tu SEO.")
     
-    # 1. El Subidor de archivos
-    uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"], key="img_uploader")
+    # 1. Subidor de archivos con llave única cerrada correctamente
+    uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"], key="uploader_final")
     
-    # Lógica de Pegamento (Session State)
+    # 2. Guardar la imagen en la memoria si hay un archivo nuevo
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        # Procesamos transparencia PNG
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
             fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
             fondo_blanco.paste(image, mask=image.split()[-1])
@@ -184,26 +183,23 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
         else:
             st.session_state["imagen_memoria"] = image.convert("RGB")
 
-    # 2. MOSTRAR LA IMAGEN SIEMPRE (Si está en memoria)
-    if "imagen_memoria" in st.session_state and st.session_state["imagen_memoria"] is not None:
+    # 3. Mostrar la imagen SIEMPRE que esté guardada
+    if "imagen_memoria" in st.session_state:
         st.image(st.session_state["imagen_memoria"], caption="Imagen lista para analizar", width=300)
 
-        # 3. Botón para leer el texto (OCR)
-        if st.button("👁️ Leer Texto del Diseño", key="btn_leer_ocr_unico"):
+        # 4. Botón para leer el texto con comillas bien cerradas
+        if st.button("👁️ Leer Texto del Diseño", key="btn_ocr_final"):
             with st.spinner("Analizando pixeles..."):
-                texto_ocr = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
-                if texto_ocr.strip():
-                    st.session_state["detected_text"] = texto_ocr
-                    st.success("✅ Texto detectado por la IA.")
-                else:
-                    st.warning("⚠️ La IA no detectó texto en la imagen. Por favor escríbelo manualmente abajo.")
+                texto = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
+                st.session_state["detected_text"] = texto
 
-    # 4. Mostrar y editar el texto detectado (O ESCRIBIR MANUALLY)
-    st.subheader("📝 Concepto Central de Diseño")
-    st.markdown("Escribe aquí lo que dice el diseño o el concepto artístico (ej: *Custom Watercolor Dog Portrait*). Esto es la base de tu SEO.")
-    
-    texto_para_input = st.session_state.get("detected_text", "")
-    nuevo_texto = st.text_input("Escribe el concepto aquí:", value=texto_para_input, key="input_txt_unico")
-    
-    # Botón explícito para guardar el texto manual
-    if st.button("💾 Guardar Concepto en Memoria", key="btn_guardar
+    # 5. Mostrar y editar el texto detectado
+    if st.session_state.get("detected_text"):
+        st.subheader("Texto detectado (Edítalo si es necesario):")
+        # Campo de texto con llave cerrada correctamente
+        nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"], key="input_text_final")
+        
+        if nuevo_texto != st.session_state["detected_text"]:
+            st.session_state["detected_text"] = nuevo_texto
+            
+        st.success("✅ ¡Texto guardado! Ya puedes ir al menú '2. Catálogo y Tiendas'.")
