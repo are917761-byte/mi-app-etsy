@@ -345,4 +345,9 @@ elif menu == "💡 7. Máquina de Ideas":
             angulo = random.choice(["Memorial Acuarela", "Gotcha Day", "Line Art Minimalista", "Óleo Renacentista"])
             prod = random.choice(["Manta", "Adorno Acrílico", "Vaso Térmico", "Lienzo"])
             st.success(f"**Vende un(a)** {prod} **estilo** {angulo} **para dueños de** {mascota}.")
+            
     with c2:
+        if st.button("🎲 Idea para Invitaciones", key="btn_idea_inv"):
+            evento = random.choice(["Fiesta de Divorcio", "Cumpleaños 15 de Perro", "Adopción de Padrastro", "Celebración de Vida", "Fiesta de Vasectomía"])
+            estilo = random.choice(["Acuarela Oscura", "Retro 70s", "Minimalista", "Boleto Falso"])
+            st.success(f"**Vende una Invitación para** {evento} **en estilo** {estilo}.")
