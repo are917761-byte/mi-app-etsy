@@ -16,16 +16,14 @@ st.set_page_config(page_title="Etsy POD Master", page_icon="🛍️", layout="wi
 # =========================
 # INICIALIZACIÓN DE MEMORIA (SESSION STATE)
 # =========================
-if "product" not in st.session_state:
-    st.session_state["product"] = None
-if "detected_text" not in st.session_state:
-    st.session_state["detected_text"] = ""
-if "niche" not in st.session_state:
-    st.session_state["niche"] = ""
-if "tienda" not in st.session_state:
-    st.session_state["tienda"] = ""
-if "tags_generados" not in st.session_state:
-    st.session_state["tags_generados"] = []
+if "product" not in st.session_state: st.session_state["product"] = None
+if "detected_text" not in st.session_state: st.session_state["detected_text"] = ""
+if "niche" not in st.session_state: st.session_state["niche"] = ""
+if "tienda" not in st.session_state: st.session_state["tienda"] = ""
+if "tags_generados" not in st.session_state: st.session_state["tags_generados"] = []
+if "imagen_memoria" not in st.session_state: st.session_state["imagen_memoria"] = None
+if "subnicho_memoria" not in st.session_state: st.session_state["subnicho_memoria"] = ""
+if "estilo_memoria" not in st.session_state: st.session_state["estilo_memoria"] = ""
 
 @st.cache_resource
 def load_reader():
@@ -59,7 +57,7 @@ def extraer_keywords_texto(texto, max_keywords=12):
     return resultado
 
 def recomendar_producto_ganador(texto, niche):
-    texto, niche = texto.lower(), niche.lower()
+    texto, niche = (texto or "").lower(), (nicho or "").lower()
     recomendaciones = []
     if any(w in texto or w in niche for w in ["navidad", "christmas", "xmas", "catmas", "ornament"]):
         recomendaciones.extend(["Ceramic Ornament (Adorno Navideño)", "Gildan 18000 (Ugly Sweater Style)"])
@@ -149,7 +147,7 @@ menu = st.sidebar.radio("Ir a:", [
 ])
 
 st.sidebar.markdown("---")
-st.sidebar.caption("POD Master v3.0 - San Luis Potosí, MX 🇲🇽")
+st.sidebar.caption("POD Master v3.0 - SLP, MX 🇲🇽")
 
 
 # =========================
@@ -170,15 +168,15 @@ if menu == "📊 Dashboard y Alertas":
 
 elif menu == "🔍 1. Subir Diseño (OCR)":
     st.title("Visión Artificial (Extraer Texto)")
-    st.markdown("Sube tu PNG transparente o Mockup. La IA leerá las letras para construir tu SEO.")
+    st.markdown("Sube tu PNG transparente. Si la imagen NO tiene texto, escribe el concepto manualmente abajo.")
     
-    # 1. Creamos el subidor de archivos
+    # 1. El Subidor de archivos
     uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"], key="img_uploader")
     
-    # 2. LÓGICA DE PEGAMENTO: Si hay un archivo nuevo, lo procesamos y guardamos
+    # Lógica de Pegamento (Session State)
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        # Procesamos transparencia
+        # Procesamos transparencia PNG
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
             fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
             fondo_blanco.paste(image, mask=image.split()[-1])
@@ -186,172 +184,26 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
         else:
             st.session_state["imagen_memoria"] = image.convert("RGB")
 
-    # 3. MOSTRAR LA IMAGEN SIEMPRE (Si está en memoria)
-    # Esta es la clave: mostramos la imagen guardada, no el archivo subido.
-    if "imagen_memoria" in st.session_state:
+    # 2. MOSTRAR LA IMAGEN SIEMPRE (Si está en memoria)
+    if "imagen_memoria" in st.session_state and st.session_state["imagen_memoria"] is not None:
         st.image(st.session_state["imagen_memoria"], caption="Imagen lista para analizar", width=300)
 
-        # 4. Botón para leer el texto
+        # 3. Botón para leer el texto (OCR)
         if st.button("👁️ Leer Texto del Diseño", key="btn_leer_ocr_unico"):
             with st.spinner("Analizando pixeles..."):
-                # Usamos la imagen de la memoria, que ya no desaparece
-                texto = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
-                st.session_state["detected_text"] = texto
+                texto_ocr = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
+                if texto_ocr.strip():
+                    st.session_state["detected_text"] = texto_ocr
+                    st.success("✅ Texto detectado por la IA.")
+                else:
+                    st.warning("⚠️ La IA no detectó texto en la imagen. Por favor escríbelo manualmente abajo.")
 
-    # 5. Mostrar y editar el texto detectado
-    if st.session_state.get("detected_text"):
-        st.subheader("Texto detectado (Edítalo si es necesario):")
-        # Usamos on_change para asegurar que el texto se guarde al editarlo
-        nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"], key="input_txt_unico")
-        
-        if nuevo_texto != st.session_state["detected_text"]:
-            st.session_state["detected_text"] = nuevo_texto
-            
-        st.success("✅ ¡Texto guardado! Ya puedes ir al menú '2. Catálogo y Tiendas'.")
-
-elif menu == "🛒 2. Catálogo y Tiendas":
-    st.title("Perfil de Tienda y Catálogo")
+    # 4. Mostrar y editar el texto detectado (O ESCRIBIR MANUALLY)
+    st.subheader("📝 Concepto Central de Diseño")
+    st.markdown("Escribe aquí lo que dice el diseño o el concepto artístico (ej: *Custom Watercolor Dog Portrait*). Esto es la base de tu SEO.")
     
-    tienda = st.radio("Selecciona la Tienda a trabajar:", ["🐾 Tienda POD Mascotas", "💌 Tienda Digital (Invitaciones)"], key="radio_tienda")
-    st.session_state["tienda"] = tienda
+    texto_para_input = st.session_state.get("detected_text", "")
+    nuevo_texto = st.text_input("Escribe el concepto aquí:", value=texto_para_input, key="input_txt_unico")
     
-    col_n, col_e = st.columns(2)
-    with col_n:
-        if tienda == "🐾 Tienda POD Mascotas":
-            subnicho = st.selectbox("Sub-Nicho:", ["Mascotas Fallecidas", "Apoyo Emocional / Servicio", "Cumpleaños Mascota Viva", "Rescate / Adopción"])
-            estilo = st.selectbox("Estilo de Arte:", ["Acuarela Digital", "Line Art Minimalista", "Caricatura", "Óleo Digital"])
-        else:
-            subnicho = st.selectbox("Sub-Nicho:", ["Fiesta de Divorcio", "Cumpleaños de Mascotas", "Conmemorativos", "Despedida Anti-Tradicional"])
-            estilo = st.selectbox("Estilo Visual:", ["Acuarela Elegante", "Sarcástico (Bold)", "Minimalista", "Boho"])
-            
-    st.session_state["niche"] = f"{subnicho} ({estilo})"
-    st.info(f"🎯 Nicho configurado: **{st.session_state['niche']}**")
-    
-    st.markdown("---")
-    st.subheader("Selección de Producto Rentable")
-    
-    if st.session_state["detected_text"]:
-        st.success("🤖 **Sugerencia de la IA basada en tu diseño:**")
-        sugs = recomendar_producto_ganador(st.session_state["detected_text"], st.session_state["niche"])
-        for s in sugs: st.write(f"🔥 {s}")
-
-    if tienda == "🐾 Tienda POD Mascotas":
-        prods = ["Velveteen Plush Blanket", "White Ceramic Mug 15oz", "Square Canvas", "Pet Bandana", "Acrylic Plaque", "Gildan 18500 Hoodie", "Bella+Canvas 3001 T-Shirt"]
-    else:
-        prods = ["Digital Invitation (Canva)", "Mobile Evite (Smartphone Size)", "Printable Memorial Sign", "Digital Portrait File"]
-        
-    cols = st.columns(3)
-    for idx, p in enumerate(prods):
-        with cols[idx % 3]:
-            if st.button(p, key=f"btn_prod_{idx}"):
-                st.session_state["product"] = p
-                
-    if st.session_state["product"]:
-        st.success(f"📦 Producto en memoria: **{st.session_state['product']}**. ¡Ve al paso 3!")
-
-elif menu == "🚀 3. Generador SEO":
-    st.title("Generador SEO Experto")
-    
-    if not st.session_state["detected_text"] or not st.session_state["product"]:
-        st.warning("⚠️ Faltan datos. Sube un diseño (Paso 1) y selecciona un producto (Paso 2) primero.")
-    else:
-        if st.button("🚀 Generar Listado Optimizado", key="btn_generar_seo"):
-            with st.spinner("Creando SEO..."):
-                texto = st.session_state["detected_text"]
-                prod = st.session_state["product"]
-                nicho = st.session_state["niche"]
-                kws = extraer_keywords_texto(texto)
-                if not kws: kws = [nicho, prod]
-                
-                st.session_state["tags_generados"] = generar_tags_etsy(kws, prod, nicho, "en")
-                
-                tab_en, tab_es = st.tabs(["🇺🇸 Inglés (Etsy EUA)", "🇪🇸 Español (Referencia)"])
-                with tab_en:
-                    st.info("Copia el título con mayor porcentaje de Match:")
-                    for t, score in generar_titulos_venta(kws, prod, nicho, "en"):
-                        if score > 95: st.success(f"⭐ **{score}% MATCH:** {t}")
-                        else: st.write(f"🔥 **{score}% MATCH:** {t}")
-                    
-                    st.subheader("🏷️ 13 Etiquetas (Separadas por coma)")
-                    st.code(", ".join(st.session_state["tags_generados"]), language="text")
-                    
-                    st.subheader("📝 Descripción de Alta Conversión")
-                    st.code(generar_descripcion_vendedora(prod, nicho, texto, "en"), language="text")
-                    
-                with tab_es:
-                    st.write("Versión en español para tu organización interna.")
-                    for t, score in generar_titulos_venta(kws, prod, nicho, "es"):
-                        st.write(f"- {t}")
-
-elif menu == "💬 4. Flujo de Muestras (Add-On)":
-    st.title("Monetización de Revisiones (Add-On)")
-    tab1, tab2, tab3 = st.tabs(["💰 Listado 'Digital Proof Add-On'", "💬 Mensaje: Enviar Muestra", "⏰ Mensaje: Alerta 24h"])
-    
-    with tab1:
-        st.info("Crea un producto digital en tu tienda con estos datos a $3.99 USD.")
-        st.subheader("Título")
-        st.code("Digital Proof Add-On for Custom Orders, Artwork Preview, See Design Before Printing", language="text")
-        st.subheader("Tags")
-        st.code("digital proof, artwork preview, add on listing, see before printing, custom order proof", language="text")
-        st.subheader("Descripción")
-        st.code("Purchase this listing IN ADDITION to your custom physical product if you wish to see a digital preview (proof) of the artwork before it is sent to production...", language="text")
-    with tab2:
-        st.code("Hi [Nombre],\n\nI have attached the proof (preview) for your custom piece. Please reply with 'APPROVED' if it looks perfect!\n\nBest, [Tu Nombre]", language="text")
-    with tab3:
-        st.code("Hi [Nombre],\n\nJust checking in! If I don't hear back by [Hora], I will proceed with printing to avoid shipping delays.\n\nThank you!", language="text")
-
-elif menu == "💰 5. Calculadora Financiera":
-    st.title("Calculadora de Rentabilidad Híbrida")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.subheader("Costos (Printify)")
-        costo_prod = st.number_input("Costo de Producción $", value=12.50, key="calc_prod")
-        costo_env = st.number_input("Costo Envío Printify $", value=4.79, key="calc_env")
-    with c2:
-        st.subheader("Estrategia Etsy")
-        precio_venta = st.number_input("Precio del Producto $", value=24.99, key="calc_precio")
-        estrategia = st.radio("Estrategia de Envío:", ["Cobrar Envío Aparte", "Envío Gratis (Absorbido)"], key="calc_estrategia")
-        cobro_cliente = st.number_input("Cobro de envío al cliente $", value=5.99, key="calc_cobro") if estrategia == "Cobrar Envío Aparte" else 0.0
-        
-    if st.button("📊 Calcular", key="btn_calcular"):
-        ingreso = precio_venta + cobro_cliente
-        etsy_fees = 0.45 + (ingreso * 0.095)
-        costo_total = costo_prod + costo_env + etsy_fees
-        ganancia = ingreso - costo_total
-        margen = (ganancia / ingreso) * 100 if ingreso > 0 else 0
-        
-        st.markdown("---")
-        r1, r2, r3 = st.columns(3)
-        r1.metric("Ingreso Bruto", f"${ingreso:.2f}")
-        r2.metric("Tarifas Etsy", f"${etsy_fees:.2f}")
-        r3.metric("Ganancia Neta", f"${ganancia:.2f}")
-        if margen >= 30: st.success(f"🔥 Margen del {margen:.1f}%. ¡Excelente para usar Ads!")
-        elif 15 <= margen < 30: st.warning(f"⚠️ Margen del {margen:.1f}%. Bueno, pero no uses Ads.")
-        else: st.error(f"🚨 Margen del {margen:.1f}%. Estás perdiendo dinero.")
-
-elif menu == "⚖️ 6. Radar Legal":
-    st.title("Protección de Propiedad Intelectual")
-    texto_auto = st.session_state["detected_text"] + " " + " ".join(st.session_state["tags_generados"])
-    texto_revisar = st.text_area("Texto a revisar (Autocompletado):", value=texto_auto, key="radar_txt")
-    
-    blacklist = ["disney", "marvel", "star wars", "nike", "harry potter", "velcro", "onesie", "jeep", "taylor swift", "stanley", "snoopy", "pokemon", "bluey"]
-    if st.button("🛡️ Escanear", key="btn_escanear"):
-        alertas = [m for m in blacklist if m in texto_revisar.lower()]
-        if alertas: st.error(f"⚠️ ¡PELIGRO TRADEMARK! Borra esto de tu listado: {', '.join(alertas).title()}")
-        else: st.success("✅ Listado Limpio de la Lista Negra.")
-
-elif menu == "💡 7. Máquina de Ideas":
-    st.title("Generador de Ideas (Océanos Azules)")
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("🎲 Idea para Mascotas", key="btn_idea_masc"):
-            mascota = random.choice(["Perro 3 Patas", "Gato Ciego", "Perro de Terapia", "Mascota Rescatada", "Golden Senior"])
-            angulo = random.choice(["Memorial Acuarela", "Gotcha Day", "Line Art Minimalista", "Óleo Renacentista"])
-            prod = random.choice(["Manta", "Adorno Acrílico", "Vaso Térmico", "Lienzo"])
-            st.success(f"**Vende un(a)** {prod} **estilo** {angulo} **para dueños de** {mascota}.")
-            
-    with c2:
-        if st.button("🎲 Idea para Invitaciones", key="btn_idea_inv"):
-            evento = random.choice(["Fiesta de Divorcio", "Cumpleaños 15 de Perro", "Adopción de Padrastro", "Celebración de Vida", "Fiesta de Vasectomía"])
-            estilo = random.choice(["Acuarela Oscura", "Retro 70s", "Minimalista", "Boleto Falso"])
-            st.success(f"**Vende una Invitación para** {evento} **en estilo** {estilo}.")
+    # Botón explícito para guardar el texto manual
+    if st.button("💾 Guardar Concepto en Memoria", key="btn_guardar
