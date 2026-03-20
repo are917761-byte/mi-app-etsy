@@ -167,41 +167,59 @@ Si pides un producto físico y deseas ver el arte antes de imprimir, por favor c
 # =========================
 
 # -----------------------------
-# 1. SUBIR DISEÑO
+# 1. SUBIR DISEÑO (OCR o Concepto Manual)
 # -----------------------------
-st.header("1️⃣ Subir diseño")
+st.header("1️⃣ Definir Concepto del Diseño")
 uploaded_file = st.file_uploader("Sube tu diseño para analizarlo", type=["png", "jpg", "jpeg"])
 
 if uploaded_file:
-    # 1. Abrimos la imagen original tal como viene
+    # --- Procesamiento de Imagen (Tu código original) ---
     image = Image.open(uploaded_file)
-    
-    # 2. MAGIA PARA FONDOS TRANSPARENTES (PNG)
     if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
-        # Creamos un fondo blanco puro del mismo tamaño
         fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
-        # Pegamos tu diseño transparente sobre el fondo blanco
         fondo_blanco.paste(image, mask=image.split()[-1])
         image = fondo_blanco
     else:
-        # Si ya es un JPG normal, la dejamos igual
         image = image.convert("RGB")
 
     st.image(image, caption="Vista previa", width=300)
 
-    if st.button("Detectar Imagen"):
-        with st.spinner("Analizando imagen..."):
-            texto = extraer_texto_ocr(reader, image)
-            st.session_state["detected_text"] = texto
+    # --- NUEVA LÓGICA ESTRATÉGICA ---
+    st.markdown("---")
+    st.subheader("📝 ¿Cómo definimos el SEO de tu diseño?")
+    st.markdown("Si tu diseño tiene texto (ej: una frase), usa el OCR. Si es **SOLO GRÁFICO** (ej: retrato de perro acuarela), escribe el concepto tú misma.")
 
+    col_ocr1, col_ocr2 = st.columns(2)
+
+    with col_ocr1:
+        # Tu botón OCR original
+        if st.button("👁️ Detectar Imagen"):
+            with st.spinner("Analizando imagen..."):
+                texto = extraer_texto_ocr(reader, image)
+                st.session_state["detected_text"] = texto
+                if not texto.strip():
+                    st.info("OCR no detectó texto. Introduce el concepto manualmente a la derecha.")
+                else:
+                    st.rerun()
+
+    with col_ocr2:
+        # Entrada manual para diseños puramente gráficos
+        st.markdown("**Entrada Manual (Para diseños gráficos):**")
+        concepto_manual = st.text_input(
+            "Describe lo que se ve en la imagen (ej: Retrato acuarela Golden Retriever):",
+            value=st.session_state["detected_text"], # Se pre-llena con OCR si hubo, o vacío si no
+            key="final_concept_input"
+        )
+        
+        # Actualizamos la variable central del SEO con lo que tú escribas
+        if concepto_manual != st.session_state["detected_text"]:
+             st.session_state["detected_text"] = concepto_manual
+
+# --- Esta condición es la que desbloquea el SEO ---
 if st.session_state["detected_text"]:
-    st.subheader("Texto detectado")
-    st.session_state["detected_text"] = st.text_area(
-        "Edita el texto si el OCR cometió un error (Esto será la base de tu SEO):",
-        st.session_state["detected_text"],
-        height=80
-    )
-    st.success("Texto listo para análisis.")
+    st.success(f"✅ Concepto '{st.session_state['detected_text']}' guardado en memoria. ¡Procede al SEO!")
+elif uploaded_file:
+    st.warning("⚠️ Ejecuta el OCR o escribe el concepto manual arriba para activar el SEO.")
 
 # -----------------------------
 # 2. TUS TIENDAS Y SUB-NICHOS ESTRELLA
