@@ -140,34 +140,48 @@ def generar_tags_etsy(keywords, product, niche, lang="en"):
     tags = []
     
     if lang == "en":
-        prod_en = limpiar_producto_en(product)
+        # Limpiamos y quitamos la palabra "Custom" si venía pegada al producto
+        prod_en = limpiar_producto_en(product).replace("Custom ", "").replace("Custom", "").strip()
         niche_en = limpiar_nicho_en(niche)
-        kw = keywords[0] if keywords else "custom"
+        kw = keywords[0] if keywords else "art"
+        
+        # Arsenal de sinónimos: No repetimos para abarcar más mercado
         raw_tags = [
-            f"custom {prod_en}", f"{niche_en} gift", f"personalized {kw}",
-            f"{kw} {prod_en}", f"custom {niche_en}", "personalized gift",
-            f"gift for {niche_en}", f"custom name {kw}", "custom portrait",
-            "unique present", "custom artwork", f"{niche_en} present", "trendy gift"
+            f"custom {prod_en}", 
+            f"{niche_en} gift", 
+            f"personalized {kw}",
+            f"unique {prod_en}", 
+            f"bespoke {niche_en}", 
+            "made to order",
+            f"gift for {niche_en}", 
+            "keepsake present", 
+            f"customized {kw}",
+            "special occasion", 
+            f"{kw} artwork", 
+            f"trendy {prod_en}", 
+            "thoughtful gift"
         ]
     else:
         prod_es = product.split(" (")[0].strip().lower()
         nicho_es = niche.split(" (")[0].strip().lower()
-        kw = keywords[0] if keywords else "regalo"
+        kw = keywords[0] if keywords else "arte"
+        
         raw_tags = [
             f"{prod_es} custom", f"regalo {nicho_es}", f"{kw} personal",
-            f"regalo {kw}", "regalo personalizado", f"para {nicho_es}",
-            "regalo con nombre", "retrato custom", "arte personalizado",
-            "detalle unico", f"{nicho_es} detalle", "tendencia"
+            f"regalo unico", "hecho a medida", f"para {nicho_es}",
+            "recuerdo especial", "arte personalizado", f"detalle {nicho_es}",
+            "regalo original", "tendencia", "regalo especial", f"{kw} a medida"
         ]
         
-    # Limpiar y asegurar que no pasen de 20 caracteres (Regla Etsy)
+    # Limpiar y asegurar que ninguna etiqueta pase de 20 caracteres (Regla Etsy)
     for t in raw_tags:
         clean_t = t.replace("  ", " ").strip()
-        if len(clean_t) <= 20 and clean_t not in tags: tags.append(clean_t)
+        if len(clean_t) <= 20 and clean_t not in tags: 
+            tags.append(clean_t)
         if len(tags) == 13: break
         
-    # Relleno de seguridad si no se alcanzan los 13 tags
-    fillers = ["custom gift", "personalized item", "special present", "unique design"]
+    # Relleno de seguridad con más sinónimos si alguna etiqueta fue descartada por ser muy larga
+    fillers = ["bespoke gift", "personalized item", "unique present", "custom design"]
     for f in fillers:
         if len(tags) < 13 and f not in tags: tags.append(f)
             
