@@ -172,12 +172,13 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
     st.title("Visión Artificial (Extraer Texto)")
     st.markdown("Sube tu PNG transparente o Mockup. La IA leerá las letras para construir tu SEO.")
     
-    # Llave única para el uploader
+    # 1. Creamos el subidor de archivos
     uploaded_file = st.file_uploader("Sube tu diseño aquí:", type=["png", "jpg", "jpeg"], key="img_uploader")
     
-    # 1. Guardar la imagen en la memoria profunda
-    if uploaded_file:
+    # 2. LÓGICA DE PEGAMENTO: Si hay un archivo nuevo, lo procesamos y guardamos
+    if uploaded_file is not None:
         image = Image.open(uploaded_file)
+        # Procesamos transparencia
         if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
             fondo_blanco = Image.new("RGB", image.size, (255, 255, 255))
             fondo_blanco.paste(image, mask=image.split()[-1])
@@ -185,25 +186,28 @@ elif menu == "🔍 1. Subir Diseño (OCR)":
         else:
             st.session_state["imagen_memoria"] = image.convert("RGB")
 
-    # 2. Mostrar la imagen SIEMPRE que esté en memoria
+    # 3. MOSTRAR LA IMAGEN SIEMPRE (Si está en memoria)
+    # Esta es la clave: mostramos la imagen guardada, no el archivo subido.
     if "imagen_memoria" in st.session_state:
-        st.image(st.session_state["imagen_memoria"], caption="Imagen en memoria lista para analizar", width=300)
+        st.image(st.session_state["imagen_memoria"], caption="Imagen lista para analizar", width=300)
 
-        # 3. Botón con llave única anti-errores
+        # 4. Botón para leer el texto
         if st.button("👁️ Leer Texto del Diseño", key="btn_leer_ocr_unico"):
             with st.spinner("Analizando pixeles..."):
+                # Usamos la imagen de la memoria, que ya no desaparece
                 texto = extraer_texto_ocr(reader, st.session_state["imagen_memoria"])
                 st.session_state["detected_text"] = texto
 
-    # 4. Mostrar y editar el texto detectado
+    # 5. Mostrar y editar el texto detectado
     if st.session_state.get("detected_text"):
-        st.subheader("Texto detectado (Edítalo para que quede perfecto):")
+        st.subheader("Texto detectado (Edítalo si es necesario):")
+        # Usamos on_change para asegurar que el texto se guarde al editarlo
         nuevo_texto = st.text_input("Concepto Central:", st.session_state["detected_text"], key="input_txt_unico")
         
         if nuevo_texto != st.session_state["detected_text"]:
             st.session_state["detected_text"] = nuevo_texto
             
-        st.success("✅ ¡Texto guardado! Ya no desaparecerá tu imagen. Ve al menú '2. Catálogo y Tiendas'.")
+        st.success("✅ ¡Texto guardado! Ya puedes ir al menú '2. Catálogo y Tiendas'.")
 
 elif menu == "🛒 2. Catálogo y Tiendas":
     st.title("Perfil de Tienda y Catálogo")
